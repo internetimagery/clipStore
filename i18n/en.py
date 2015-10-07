@@ -1,5 +1,8 @@
 # English Language!
 
 En = {
-    "test"  : "testing123"
-}
+    "thumbNew" : { # New Thumbnail Window
+        "title"         : "Capture Thumbnail",
+        "captureBtn"    : "Capture!"
+        }
+    }
