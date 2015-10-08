@@ -117,6 +117,7 @@ class Character(object):
         Add / Retrieve an item / reference
         Using references means we can change the info in one place,
         without breaking all the clips.
+        Excessive referencing might bulk it up a bit though...
         """
         if item:
             if not s.reference: s.reference = [[],[]]
@@ -125,7 +126,7 @@ class Character(object):
             try: return s.reference[s.reference[1].index(item)][0]
             except ValueError: pass
             s.reference[0].append(str(uuid.uuid4())) # UUID
-            s.reference[1].append(item)
+            s.reference[1].append(item) # Add the item
 
 root = os.path.dirname(__file__)
 import sys
