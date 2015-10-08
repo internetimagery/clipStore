@@ -5,14 +5,11 @@ import maya.cmds as cmds
 
 i18n = {
     "characterNew"  : {
-        "title"     : "Create a new Character",
-        "file"      : "Choose a file to save",
-        "fileDesc"  : "Click to pick a filename",
+        "title"     : "Modify Character",
         "obj"       : "Add selected objects",
         "objDesc"   : "Click to add selected objects",
-        "filter"    : "Filter attributes",
-        "whitelist" : "Include Attributes",
-        "blacklist" : "Exclude Attributes"
+        "objbtnDesc": "Click to select object. Double click to rename.",
+        "filter"    : "Include Attributes",
     }
 }
 
@@ -31,17 +28,6 @@ class CharacterNew(object):
         row1 = 150 #rwo width
         col1 = [0.22,0.22,0.22]
         col2 = [0.25,0.25,0.25]
-        # SAVE FILE
-        cmds.rowLayout(nc=2, adj=2, bgc=col2)
-        cmds.text(h=30, w=row1, l=s.i18n["file"])
-        cmds.iconTextButton(
-            l=s.data.get("file", s.i18n["fileDesc"]),
-            ann=s.i18n["fileDesc"],
-            image="polyColorSetEditor.png",
-            style="iconAndTextHorizontal",
-            h=30
-        )
-        cmds.setParent("..")
         # ADD OBJECTS
         cmds.rowLayout(nc=2, adj=2, bgc=col1)
         cmds.text(h=30, w=row1, l=s.i18n["obj"])
@@ -58,14 +44,11 @@ class CharacterNew(object):
         cmds.setParent("..") # Close column
         cmds.setParent("..") # Close row
         # FILTER ATTRIBUTES
-        cmds.rowLayout(nc=2, adj=2, bgc=col2)
+        cmds.rowLayout(nc=2, adj=2, bgc=col1)
         cmds.text(h=30, w=row1, l=s.i18n["filter"])
-        cmds.tabLayout(cr=True)
-        s.whitelist = cmds.scrollLayout(s.i18n["whitelist"], cr=True, bgc=[0.2,0.2,0.2])
-        cmds.text("here")
-        cmds.setParent("..")
-        s.blacklist = cmds.scrollLayout(s.i18n["blacklist"], cr=True, bgc=[0.2,0.2,0.2])
-        cmds.text("here2")
+        s.attrwrapper = cmds.scrollLayout(cr=True, bgc=[0.2,0.2,0.2])
+        cmds.setParent("..") # close scroll
+        cmds.setParent("..") # Close row
         cmds.showWindow(s.window)
     def clearLayout(s, layout):
         children = cmds.layout(layout, q=True, ca=True)
@@ -78,7 +61,7 @@ class CharacterNew(object):
         s.data["objs"] |= set(cmds.ls(sl=True, type="transform"))
         attrs = set(cmds.listAttr(list(s.data["objs"]), k=True)) if s.data["objs"] else set()
         s.displayObjects()
-        s.displayFilters(attrs)
+        # s.displayFilters(attrs)
     def displayObjects(s):
         s.clearLayout(s.objwrapper)
         if s.data.get("objs", None):
@@ -86,18 +69,37 @@ class CharacterNew(object):
                 def remObj():
                     s.data["objs"].remove(obj)
                     cmds.layout(row, e=True, m=False)
-                row = cmds.rowLayout(nc=3, adj=2, p=s.objwrapper)
-                cmds.iconTextStaticLabel(
+                def selectObj(): cmds.select(obj, r=True)
+                def renameObj(text):
+                    cmds.iconTextButton(btn, e=True, m=True, l=text)
+                    cmds.textField(editText, e=True, m=False)
+                    print "rename!", text
+                def enableEdit():
+                    cmds.control(btn, e=True, m=False)
+                    cmds.control(editText, e=True, m=True)
+                row = cmds.rowLayout(nc=2, adj=1, p=s.objwrapper)
+                col = cmds.columnLayout(adj=True)
+                btn = cmds.iconTextButton(
                     l=obj,
                     image="cube.png",
-                    style="iconOnly",
-                    h=30
+                    style="iconAndTextHorizontal",
+                    h=35,
+                    c=selectObj,
+                    dcc=lambda: enableEdit()
                 )
-                cmds.text(l=obj, al="left")
+                editText = cmds.textField(
+                    tx=obj,
+                    aie=True,
+                    h=35,
+                    ec=lambda x: renameObj(x),
+                    m=False
+                )
+                cmds.setParent("..")
                 cmds.iconTextButton(
                     image="removeRenderable.png",
                     style="iconOnly",
-                    h=30,
+                    h=35,
+                    w=35,
                     c=remObj
                 )
                 cmds.setParent("..")
