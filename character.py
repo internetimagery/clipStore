@@ -36,16 +36,31 @@ class Clip(object):
             "modifiedOn"    : time.time(),
             "modifiedBy"    : getpass.getuser()
         }
-        s.clipData = {} # { ID , { Attribute, [ value, value ... ] } }
+        s.clipData = {} # { Obj , { Attribute, [ value, value ... ] } }
         if root: # We want to load this information. Otherwise creating new
+            root = os.path.join(root, ID)
             # Load Metadata
             metaFile = os.path.join(root, "metadata.json")
             s.metadata = UpdateData(metaFile, s.metadata, lambda x, y: dict(x, **y))
             # Load Clip Data
-            clipFile = os.path.join(root, "metadata.json")
+            clipFile = os.path.join(root, "clip.json")
             s.clipData = UpdateData(clipFile, s.clipData, lambda x, y: dict(x, **y))
         s.thumbs = {} # {small : Path, medium : Path, large : Path}
         s.tempThumb = {} # {small : Path, medium : Path, large : Path}
+    def save(s, root):
+        """
+        Run by the Character. Save the data to its own space
+        """
+        root = os.path.join(root, s.ID)
+        if not os.path.isdir(root): os.mkdir(root)
+        # Save metadata
+        s.metadata["modifiedOn"] = time.time()
+        s.metadata["modifiedBy"] = getpass.getuser()
+        with open(os.path.join(root, "metadata.json"), "w") as f:
+            json.dump(s.metadata, f)
+        # Save clip data
+        with open(os.path.join(root, "clip.json"), "w") as f:
+            json.dump(s.clipData, f)
 
 # Structure:
 #
@@ -85,11 +100,11 @@ class Character(object):
             # Load clips
             clipsFile = os.path.join(sf, "clips")
             if os.path.isdir(clipsFile):
-                clips = os.listdir()
+                clips = os.listdir(clipsFile)
                 if clips: # We have some existing clips to load
                     for ID in clips:
                         try:
-                            s.clips.append(Clip(s, ID, os.path.join(clips, ID)))
+                            s.clips.append(Clip(s, ID, clipsFile))
                         except IOError:
                             print "Failed to load clip %s." % clip
     def save(s):
@@ -111,7 +126,7 @@ class Character(object):
             clipsFile = os.path.join(sf, "clips")
             if not os.path.isdir(clipsFile): os.mkdir(clipsFile)
             for clip in s.clips:
-                print "add in clip save functionality, espeically thumbs"
+                clip.save(clipsFile)
     def getReference(s, item):
         """
         Add / Retrieve an item / reference
@@ -150,6 +165,13 @@ class Character(object):
                 del s.reference[1][i] # Remove item
             except ValueError:
                 raise RuntimeError, "ID not found in reference."
+    def createClip(s):
+        """
+        Create a new clip.
+        """
+        c = Clip(s, str(uuid.uuid4())) # Create a new clip
+        s.clips.append(c)
+        return c
 
 root = os.path.dirname(__file__)
 import sys
@@ -159,7 +181,9 @@ path = os.path.join(root, "savefile.zip")
 import saveFile
 
 c = Character(path, "maya")
-print c.getReference("pSphere1")
-print c.getReference("pSphere3")
-print c.getReference("pSphere2")
+ref = c.getReference("pSphere1")
+print ref
+c.replaceReference(ref, "pSphere3")
+print c.getReference(ref)
+print c.createClip()
 c.save()
