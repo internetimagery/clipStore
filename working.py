@@ -11,8 +11,8 @@ i18n = {
         "obj"       : "Add selected objects",
         "objDesc"   : "Click to add selected objects",
         "filter"    : "Filter attributes",
-        "whitelist" : "Whitelist Filter",
-        "blacklist" : "Blacklist Filter"
+        "whitelist" : "Include Attributes",
+        "blacklist" : "Exclude Attributes"
     }
 }
 
@@ -61,23 +61,26 @@ class CharacterNew(object):
         cmds.rowLayout(nc=2, adj=2, bgc=col2)
         cmds.text(h=30, w=row1, l=s.i18n["filter"])
         cmds.tabLayout(cr=True)
-        cmds.scrollLayout(s.i18n["whitelist"], cr=True, bgc=[0.2,0.2,0.2])
-        s.whitelist = cmds.columnLayout(adj=True)
+        s.whitelist = cmds.scrollLayout(s.i18n["whitelist"], cr=True, bgc=[0.2,0.2,0.2])
         cmds.text("here")
         cmds.setParent("..")
-        cmds.setParent("..")
-        cmds.scrollLayout(s.i18n["blacklist"], cr=True, bgc=[0.2,0.2,0.2])
-        s.blacklist = cmds.columnLayout(adj=True)
+        s.blacklist = cmds.scrollLayout(s.i18n["blacklist"], cr=True, bgc=[0.2,0.2,0.2])
         cmds.text("here2")
         cmds.showWindow(s.window)
+    def clearLayout(s, layout):
+        children = cmds.layout(layout, q=True, ca=True)
+        if children:
+            for c in children:
+                try: cmds.deleteUI(c)
+                except RuntimeError: pass
     def addObjects(s):
         s.data["objs"] = s.data.get("objs", set())
         s.data["objs"] |= set(cmds.ls(sl=True, type="transform"))
+        attrs = set(cmds.listAttr(list(s.data["objs"]), k=True)) if s.data["objs"] else set()
         s.displayObjects()
+        s.displayFilters(attrs)
     def displayObjects(s):
-        children = cmds.scrollLayout(s.objwrapper, q=True, ca=True)
-        if children:
-            cmds.deleteUI(children)
+        s.clearLayout(s.objwrapper)
         if s.data.get("objs", None):
             def addObj(obj):
                 def remObj():
@@ -104,10 +107,19 @@ class CharacterNew(object):
 
     def buildObjs(s, obj):
         pass
-    def buildFilters(s, whitelist, blacklist):
-        if whitelist:
-            pass
-        if blacklist:
-            pass
+    def displayFilters(s, attrs):
+        s.clearLayout(s.whitelist)
+        s.clearLayout(s.blacklist)
+        def addFilter(parent, listing, name):
+            exist = s.data.get(listing, [])
+            btn = cmds.iconTextCheckBox(
+                l=name,
+                image="currentNamespace.png" if name in exist else "closeAttribute.png",
+                v=True if name in exist else False
+            )
+        if attrs:
+            for at in attr:
+                addFilter(s.whitelist, "whitelist", at)
+                addFilter(s.blacklist, "blacklist", at)
 
 CharacterNew(i18n["characterNew"])
