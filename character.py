@@ -1,7 +1,17 @@
 # Character. Loaded from clips file
 
+### REMOVE THIS
+import os.path
+import sys
+root = os.path.dirname(__file__)
+sys.path.append(root)
+#####
+
+import saveFile
 import os.path
 import getpass
+import image
+import shutil
 import time
 import uuid
 import json
@@ -34,7 +44,9 @@ class Clip(object):
             "createdOn"     : time.time(),
             "createdBy"     : getpass.getuser(),
             "modifiedOn"    : time.time(),
-            "modifiedBy"    : getpass.getuser()
+            "modifiedBy"    : getpass.getuser(),
+            "thumbSmall"    : image.small, # Thumbnail for clip
+            "thumbLarge"    : image.large
         }
         s.clipData = {} # { Obj , { Attribute, [ value, value ... ] } }
         if root: # We want to load this information. Otherwise creating new
@@ -45,14 +57,23 @@ class Clip(object):
             # Load Clip Data
             clipFile = os.path.join(root, "clip.json")
             s.clipData = UpdateData(clipFile, s.clipData, lambda x, y: dict(x, **y))
-        s.thumbs = {} # {small : Path, medium : Path, large : Path}
-        s.tempThumb = {} # {small : Path, medium : Path, large : Path}
     def save(s, root):
         """
         Run by the Character. Save the data to its own space
         """
         root = os.path.join(root, s.ID)
         if not os.path.isdir(root): os.mkdir(root)
+        # Save images
+        for key, name in {
+            "thumbLarge" : "large",
+            "thumbSmall" : "small"
+            }.iteritems():
+            path = s.metadata[key]
+            if os.path.isabs(path):
+                fn = name + os.path.splitext(path)[1]
+                if os.path.isfile(path):
+                    shutil.copyfile(path, os.path.join(root, fn))
+                s.metadata[key] = fn
         # Save metadata
         s.metadata["modifiedOn"] = time.time()
         s.metadata["modifiedBy"] = getpass.getuser()
@@ -173,12 +194,7 @@ class Character(object):
         s.clips.append(c)
         return c
 
-root = os.path.dirname(__file__)
-import sys
-sys.path.append(root)
 path = os.path.join(root, "savefile.zip")
-
-import saveFile
 
 c = Character(path, "maya")
 ref = c.getReference("pSphere1")
