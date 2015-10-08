@@ -121,12 +121,35 @@ class Character(object):
         """
         if item:
             if not s.reference: s.reference = [[],[]]
-            try: return s.reference[s.reference[0].index(item)][0]
+            try: return s.reference[1][s.reference[0].index(item)]
             except ValueError: pass
-            try: return s.reference[s.reference[1].index(item)][0]
+            try: return s.reference[0][s.reference[1].index(item)]
             except ValueError: pass
             s.reference[0].append(str(uuid.uuid4())) # UUID
             s.reference[1].append(item) # Add the item
+            return s.reference[0][-1]
+    def replaceReference(s, ID, item):
+        """
+        What would referencing be without the ability to replace.
+        Given the ID and item, replace!
+        """
+        if ID and item:
+            try:
+                i = s.reference[0].index(ID)
+                s.reference[1][i] = item
+            except ValueError:
+                raise RuntimeError, "ID not found in reference."
+    def removeReference(s, ID):
+        """
+        Get rid of a reference
+        """
+        if ID:
+            try:
+                i = s.reference[0].index(ID)
+                del s.reference[0][i] # Removed ID
+                del s.reference[1][i] # Remove item
+            except ValueError:
+                raise RuntimeError, "ID not found in reference."
 
 root = os.path.dirname(__file__)
 import sys
@@ -137,4 +160,6 @@ import saveFile
 
 c = Character(path, "maya")
 print c.getReference("pSphere1")
+print c.getReference("pSphere3")
+print c.getReference("pSphere2")
 c.save()
