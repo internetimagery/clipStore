@@ -25,6 +25,7 @@ class Timer(object):
 class SaveFile(object):
     def __init__(s, path):
         s.path = path # Where does this savefile live?
+        if os.path.isdir(s.path): raise IOError, "Path provided is not a file."
     def __enter__(s):
         """
         Open a savefile and return its temporary location

@@ -22,5 +22,12 @@ En = {
         "objbtnDesc": "Click to select object.\nDouble click to rename.",
         "objDelDesc": "Click to delete the object.",
         "filter"    : "Include Attributes",
+        },
+    "filedialog" : {
+        "titleLoad"     : "Load a Character",
+        "titleSave"     : "Save your Character",
+        "loadBtn"       : "Load Character",
+        "saveBtn"       : "Save Character",
+        "cancelBtn"     : "Cancel"
     }
 }
