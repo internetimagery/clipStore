@@ -14,5 +14,13 @@ En = {
         "thumbDesc"     : "Click to create a new thumbnail",
         "save"          : "SAVE CLIP",
         "cancel"        : "DONT SAVE"
+        },
+    "characterNew"  : {
+        "title"     : "Modify Character",
+        "obj"       : "Add selected objects",
+        "objDesc"   : "Click to add selected objects",
+        "objbtnDesc": "Click to select object.\nDouble click to rename.",
+        "objDelDesc": "Click to delete the object.",
+        "filter"    : "Include Attributes",
     }
 }
