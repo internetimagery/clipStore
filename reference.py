@@ -1,4 +1,6 @@
 # Reverse lookup dict that tracks values with IDs
+# Created 10/10/15 Jason Dixon
+# http://internetimagery.com
 
 import collections
 import uuid
