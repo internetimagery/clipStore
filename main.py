@@ -1,4 +1,5 @@
 # Lets run this thing!!
+import character
 import os.path
 import os
 
@@ -8,7 +9,10 @@ class Main(object):
         s.view = view
         s.model = model
         s.software = software
-        print "lets go"
+
+        s.ext = ".char" # File extension!
+
+        # Load our Selector window
         view.selector(
             s.i18n["selector"],
             s.sendFiles,
@@ -23,7 +27,7 @@ class Main(object):
             path = s.view.fileDialog(s.i18n["filedialog"]).openDir()
         if path:
             path = os.path.realpath(path)
-            return [os.path.join(path, f) for f in os.listdir(path) if ".char" in f]
+            return [os.path.join(path, f) for f in os.listdir(path) if s.ext in f]
     def characterNew(s):
         """
         Create a new character!

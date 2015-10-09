@@ -1,4 +1,6 @@
 # Load and open a savefile for editing. For use with the "with" statement
+# Created 10/10/15 Jason Dixon
+# http://internetimagery.com
 
 import tempfile
 import zipfile

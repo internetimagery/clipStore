@@ -1,4 +1,6 @@
 # Pick a folder and display all character files within
+# Created 10/10/15 Jason Dixon
+# http://internetimagery.com
 
 import maya.cmds as cmds
 import os.path
