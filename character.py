@@ -153,11 +153,11 @@ class Character(object):
         """
         Create a new clip.
         """
-        c = Clip(s, str(uuid.uuid4())) # Create a new clip
+        c = Clip(s, uuid.uuid4().hex) # Create a new clip
         s.clips.append(c)
         return c
 
-path = os.path.join(root, "savefile.zip")
+path = os.path.join(root, "test", "savefile.zip")
 
 c = Character(path, "maya")
 print c.ref
@@ -165,4 +165,5 @@ ref = c.ref["pSphere1"]
 print ref
 c.ref[ref] = "pSphere3"
 print c.ref[ref]
+c.createClip()
 c.save()
