@@ -4,10 +4,11 @@ import maya.cmds as cmds
 
 i18n = {
     "clips" : {
-        "title"     : "Clips Menu",
-        "editchar"  : "Click to change the characters details",
-        "addclip"   : "Click to add clip to the scene",
-        "editclip"  : "Click to change the clips details"
+        "title"         : "Clips Menu",
+        "editChar"      : "Click to change the characters details",
+        "addClip"       : "Click to add clip to the scene",
+        "editClip"      : "Edit",
+        "editClipDesc"  : "Click to change the clips details"
     }
 }
 
@@ -31,7 +32,7 @@ class Clips(object):
             h=50
             )
         cmds.iconTextButton(
-            ann=i18n["editchar"],
+            ann=i18n["editChar"],
             style="iconOnly",
             font="boldLabelFont",
             image="ghostOff.png",
@@ -50,36 +51,59 @@ class Clips(object):
             h=20
             )
         cmds.scrollLayout(cr=True, bgc=[0.2,0.2,0.2], h=400)
-        s.wrapper = cmds.gridLayout(cwh=[100, 100], cr=True)
+        s.wrapper = cmds.gridLayout(cwh=[100, 130], cr=True)
         cmds.showWindow(s.window)
         s.refresh()
     def sizeClips(s, val):
-        cmds.gridLayout(s.wrapper, e=True, cwh=[val,val])
+        cmds.gridLayout(s.wrapper, e=True, cwh=[val,val+30])
+        if s.clips:
+            for c in s.clips:
+                c.resize(val)
     def refresh(s):
         try:
             cmds.deleteUI(cmds.layout(s.wrapper, q=True, ca=True))
         except RuntimeError:
             pass
-        def addClip(c):
-            cmds.columnLayout(adj=True, bgc=[0.1,0.1,0.1], p=s.wrapper)
-            cmds.iconTextButton(
-                ann=s.i18n["addclip"],
-                style="iconOnly",
-                # image="ghostOff.png",
-                # image1="hierOff.png",
-                image="gravityField.open.svg",
-                c=lambda: s.sendClip(c)
+        s.clips = []
+        for c in range(20): # TODO, get these from the character
+            s.clips.append(Clip(
+                s.i18n,
+                s.wrapper,
+                c,
+                s.sendClip,
+                s.requestClipEdit,
+                "ghostOff.png",
+                "time.svg"
+                ))
+            s.clips[-1].resize(100)
+
+class Clip(object):
+    """
+    Single clip
+    """
+    def __init__(s, i18n, parent, clip, sendClip, requestClipEdit, imgSmall, imgLarge):
+        cmds.columnLayout(adj=True, bgc=[0.1,0.1,0.1], p=parent)
+        s.imgSmall = imgSmall
+        s.imgLarge = imgLarge
+        s.img = cmds.iconTextButton(
+            l="",
+            ann=i18n["addClip"],
+            style="iconOnly",#"iconAndTextVertical",
+            image=s.imgSmall,
+            c=lambda: sendClip(clip)
             )
-            cmds.button(
-                l=s.i18n["editclip"],
-                h=30,
-                c=lambda x: s.requestClipEdit(c)
-                )
-        for c in range(20):
-            addClip(c)
+        s.btn = cmds.button(
+            l=i18n["editClip"],
+            ann=i18n["editClipDesc"],
+            h=30,
+            c=lambda x: requestClipEdit(clip)
+            )
+    def resize(s, size):
+        img = s.imgSmall if size < 150 else s.imgLarge
+        cmds.iconTextButton(s.img, e=True, w=size, h=size, i=img)
 
-
-def test(*args):
-    print "edit", args
-
-Clips(i18n["clips"], None, test, test, test)
+# 
+# def test(*args):
+#     print "edit", args
+#
+# Clips(i18n["clips"], None, test, test, test)

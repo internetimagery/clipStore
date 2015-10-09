@@ -36,5 +36,12 @@ En = {
         "none"  : "There are no Character files in this folder.",
         "open"  : "Open a folder containing Characters",
         "new"   : "Create a new Character."
+        },
+    "clips" : {
+        "title"         : "Clips Menu",
+        "editChar"      : "Click to change the characters details",
+        "addClip"       : "Click to add clip to the scene",
+        "editClip"      : "Edit",
+        "editClipDesc"  : "Click to change the clips details"
     }
 }

@@ -32,13 +32,27 @@ class Main(object):
         """
         Create a new character!
         """
-        print "new char"
+        path = s.view.fileDialog(s.i18n["filedialog"]).save()
+        if path:
+            c = character.Character(path, s.software)
+            s.view.clips(
+                s.i18n["clips"],
+                c,
+                characterEdit,
+                clipEdit,
+                clipPose
+                )
     def characterLoad(s, path):
         """
         Open an existing character!
         """
         print "opening char", path
-
+    def characterEdit(s, char):
+        print "edit char"
+    def clipEdit(s, clip):
+        print "editclip"
+    def clipPose(s, clip):
+        print "pose out clip"
 
 ### TESTING
 # import animCopy.view.maya as view
