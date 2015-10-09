@@ -28,8 +28,7 @@ class SaveFile(object):
     def __init__(s, path):
         s.path = path # Where does this savefile live?
         if os.path.isdir(s.path): raise IOError, "Path provided is not a file."
-        s.cacheFiles = [] # Temp files created for last minute cleanup.
-    def cache(s, paths):
+    def pull(s, paths):
         """
         Pull out group of files into temporary locations.
         Return function responsible for cleaning it up.
@@ -53,10 +52,6 @@ class SaveFile(object):
                 cleanup()
             s.cacheFiles.append(cleanup)
             return files, cleanup
-    def __del__(s):
-        if s.cacheFiles:
-            for c in s.cacheFiles:
-                c()
     def __enter__(s):
         """
         Open a savefile and return its temporary location using "with"

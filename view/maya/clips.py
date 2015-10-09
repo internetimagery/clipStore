@@ -29,21 +29,8 @@ class Clips(object):
         s.winName = "%sWin" % name
         if cmds.window(s.winName, ex=True):
             cmds.deleteUI(s.winName)
-        s.window = cmds.window(s.winName, rtf=True, t=1"%s %s" % (name, i18n["title"]))
+        s.window = cmds.window(s.winName, rtf=True, t="%s %s" % (name, i18n["title"]))
         cmds.columnLayout(adj=True)
-        cmds.floatSlider(
-            min=50,
-            max=200,
-            v=100,
-            dc=s.sizeClips,
-            h=20
-            )
-        cmds.frameLayout(l=i18n["moreInfo"], font="tinyBoldLabelFont")
-        cmds.scrollLayout(cr=True, mcw=400, bgc=[0.2,0.2,0.2], h=400)
-        s.wrapper = cmds.gridLayout(cwh=[100, 120], cr=True)
-        cmds.setParent("..") # Close grid
-        cmds.setParent("..") # Close Scroll
-        cmds.separator()
         cmds.rowLayout(nc=2, adj=2) # Open Row
         cmds.iconTextButton(
             ann=i18n["editChar"],
@@ -67,6 +54,20 @@ class Clips(object):
             h=50
             )
         cmds.setParent("..") # Close row
+        cmds.floatSlider(
+            min=50,
+            max=200,
+            v=100,
+            dc=s.sizeClips,
+            h=20
+            )
+        cmds.separator()
+        cmds.frameLayout(l=i18n["moreInfo"], font="tinyBoldLabelFont")
+        cmds.scrollLayout(cr=True, mcw=400, bgc=[0.2,0.2,0.2], h=400)
+        s.wrapper = cmds.gridLayout(cwh=[100, 120], cr=True)
+        cmds.setParent("..") # Close grid
+        cmds.setParent("..") # Close Scroll
+        cmds.separator()
         cmds.showWindow(s.window)
         cmds.scriptJob(uid=[s.window, s.cleanup], ro=True)
         s.refresh()
@@ -119,9 +120,9 @@ class Clip(object):
         cmds.menuItem(l=i18n["includeSel"])
         cmds.menuItem(ob=True, obi="channelBoxSlow.png")
         cmds.menuItem(d=True)
-        cmds.menuItem(l=i18n["editClip"])
+        cmds.menuItem(l=i18n["editClip"], c=lambda x: requestClipEdit(clip))
         cmds.menuItem(ob=True, obi="pencilCursor.png")
-        cmds.menuItem(l=i18n["deleteClip"], c=lambda: sendDelClip(clip))
+        cmds.menuItem(l=i18n["deleteClip"], c=lambda x: sendDelClip(clip))
         cmds.menuItem(ob=True, obi="SP_TrashIcon.png")
     def resize(s, size):
         img = s.imgSmall if size < 150 else s.imgLarge

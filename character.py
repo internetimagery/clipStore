@@ -64,15 +64,16 @@ class Clip(object):
             clipFile = os.path.join(root, "clip.json")
             s.clipData = UpdateData(clipFile, s.clipData, lambda x, y: dict(x, **y))
         s.cleanup = [] # Temp files that might need to be cleaned?
-    def imgCache(s):
+    def imgPull(s):
         """
-        Dump images into a temporary location to be accessable.
+        Dump images into a temporary location to be accessable by GUI etc.
         Return a function to clean up the cache.
         """
         result = s.character.saveFile.cache([v for k, v in s.metadata.items() if "thumb" in k])
         if result: return files, cleanup
+    def _save(s):
         """
-        Run by the Character. Save the data to its own space
+        Executed by the Character. Save the data to its own space
         """
         root = os.path.join(root, s.ID)
         if not os.path.isdir(root): os.mkdir(root)
@@ -95,16 +96,6 @@ class Clip(object):
         # Save clip data
         with open(os.path.join(root, "clip.json"), "w") as f:
             json.dump(s.clipData, f)
-    def __del__(s):
-        """
-        Clean up any files left over
-        """
-        if s.cleanup:
-            for f in s.cleanup:
-                if os.path.isfile(f):
-                    os.remove(f)
-                elif os.path.isdir(f):
-                    os.rmdir(f)
 
 class Character(object):
     """
@@ -159,7 +150,7 @@ class Character(object):
             clipsFile = os.path.join(sf, "clips")
             if not os.path.isdir(clipsFile): os.mkdir(clipsFile)
             for clip in s.clips:
-                clip.save(clipsFile)
+                clip._save(clipsFile)
     def createClip(s):
         """
         Create a new clip.
