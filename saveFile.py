@@ -28,9 +28,32 @@ class SaveFile(object):
     def __init__(s, path):
         s.path = path # Where does this savefile live?
         if os.path.isdir(s.path): raise IOError, "Path provided is not a file."
+        s.cacheFiles = [] # Temp files created for last minute cleanup.
+    def cache(s, paths):
+        """
+        Pull out group of files into temporary locations.
+        Return function responsible for cleaning it up.
+        """
+        def cleanup():
+            try: shutil.rmtree(s.tempdir)
+        except IOError: pass
+        if os.path.isfile(s.path):
+            files = {}
+            tmp = tempfile.mkdtemp() # Temp file
+            try:
+                z = zipfile.ZipFile(s.path, "r")
+                names = z.namelist()
+                for path in paths:
+                    if path in names:
+                        z.extract(path, tmp)
+                        files[path] = os.path.realpath(os.path.join(tmp, path))
+            except (zipfile.BadZipfile, IOError, WindowsError):
+                cleanup()
+            s.cacheFiles.append(cleanup)
+            return files, cleanup
     def __enter__(s):
         """
-        Open a savefile and return its temporary location
+        Open a savefile and return its temporary location using "with"
         """
         s.tempdir = tempfile.mkdtemp()
         if os.path.isfile(s.path):

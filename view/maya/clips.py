@@ -6,7 +6,8 @@ i18n = {
     "clips" : {
         "title"         : "Clips Menu",
         "editChar"      : "Click to change the characters details",
-        "addClip"       : "Click to add clip to the scene",
+        "newClip"       : "Capture a new Clip!",
+        "addClip"       : "Click to apply the Clip to the Character.\nRight click for more options...",
         "editClip"      : "Change the clips details",
         "deleteClip"    : "Delete the clip.",
         "ignoreSel"     : "Apply the clip, ignoring anything selected.",
@@ -26,7 +27,7 @@ class Clips(object):
         s.requestClipEdit = requestClipEdit # We're asking to edit the clip
         s.sendDelClip = sendDelClip
         s.sendClip = sendClip # User wants to place the clip
-        name = "clipname"
+        name = "CHARNAME"
 
         s.winName = "%sWin" % name
         if cmds.window(s.winName, ex=True):
@@ -45,36 +46,14 @@ class Clips(object):
             c=requestCharEdit
         )
         cmds.text(
-            l="<h1>%s</h1>" % name,
+            l="<h1>%s</h1>" % "CHARNAME",
             hl=True,
             h=50
             )
         cmds.setParent("..") # Close row
-        cmds.rowLayout(nc=2, adj=2) # Open Row
         cmds.columnLayout(adj=True) # Open Col
-        s.includeSel = cmds.iconTextCheckBox(
-            ann=i18n["includeSel"],
-            style="iconOnly",
-            font="boldLabelFont",
-            image="channelBoxSlow.png",
-            h=25,
-            w=50,
-            bgc=[0.3,0.3,0.3],
-            cc=s.setInclude
-        )
-        s.ignoreSel = cmds.iconTextCheckBox(
-            ann=i18n["ignoreSel"],
-            style="iconOnly",
-            font="boldLabelFont",
-            image="channelBoxMedium.png",
-            h=25,
-            w=50,
-            bgc=[0.3,0.3,0.3],
-            cc=s.setIgnore
-        )
-        cmds.setParent("..") # Close Col
         cmds.button(
-            l="CREATE NEW",
+            l=i18n["newClip"],
             h=50
             )
         cmds.setParent("..") # Close row
@@ -91,22 +70,6 @@ class Clips(object):
         s.wrapper = cmds.gridLayout(cwh=[100, 120], cr=True)
         cmds.showWindow(s.window)
         s.refresh()
-    def setInclude(s, val):
-        cmds.iconTextCheckBox(
-            s.includeSel,
-            e=True,
-            bgc=[0.5,0.5,0.5] if val else [0.3,0.3,0.3],
-            v=val
-            )
-        if val: s.setIgnore(False)
-    def setIgnore(s, val):
-        cmds.iconTextCheckBox(
-            s.ignoreSel,
-            e=True,
-            bgc=[0.5,0.5,0.5] if val else [0.3,0.3,0.3],
-            v=val
-            )
-        if val: s.setInclude(False)
     def sizeClips(s, val):
         cmds.gridLayout(s.wrapper, e=True, cwh=[val,val+20])
         if s.clips:
@@ -125,7 +88,7 @@ class Clips(object):
                 c,
                 s.sendClip,
                 s.requestClipEdit,
-                s.sendDelClip
+                s.sendDelClip,
                 "ghostOff.png",
                 "time.svg"
                 ))
@@ -136,10 +99,10 @@ class Clip(object):
     Single clip
     """
     def __init__(s, i18n, parent, clip, sendClip, requestClipEdit, sendDelClip, imgSmall, imgLarge):
-        cmds.columnLayout(adj=True, bgc=[0.1,0.1,0.1], p=parent)
+        cmds.columnLayout(adj=True, bgc=[0.18,0.18,0.18], p=parent)
         s.imgSmall = imgSmall
         s.imgLarge = imgLarge
-        cmds.text(l="NAME OF CLIP", h=20)
+        cmds.text(l="CLIPNAME", h=20)
         s.img = cmds.iconTextButton(
             l="",
             ann=i18n["addClip"],
@@ -148,6 +111,7 @@ class Clip(object):
             c=lambda: sendClip(clip)
             )
         cmds.popupMenu()
+        cmds.menuItem(l="CLIPNAME", en=False, itl=True)
         cmds.menuItem(l=i18n["ignoreSel"])
         cmds.menuItem(ob=True, obi="channelBoxMedium.png")
         cmds.menuItem(l=i18n["includeSel"])

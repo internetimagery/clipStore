@@ -63,7 +63,14 @@ class Clip(object):
             # Load Clip Data
             clipFile = os.path.join(root, "clip.json")
             s.clipData = UpdateData(clipFile, s.clipData, lambda x, y: dict(x, **y))
-    def save(s, root):
+        s.cleanup = [] # Temp files that might need to be cleaned?
+    def imgCache(s):
+        """
+        Dump images into a temporary location to be accessable.
+        Return a function to clean up the cache.
+        """
+        result = s.character.saveFile.cache([v for k, v ins.metadata.items()] if "thumb" in k)
+        if result: return files, cleanup
         """
         Run by the Character. Save the data to its own space
         """
@@ -79,7 +86,7 @@ class Clip(object):
                 fn = name + os.path.splitext(path)[1]
                 if os.path.isfile(path):
                     shutil.copyfile(path, os.path.join(root, fn))
-                s.metadata[key] = fn
+                s.metadata[key] = "clips/%s/%s" % (s.ID, fn)
         # Save metadata
         s.metadata["modifiedOn"] = time.time()
         s.metadata["modifiedBy"] = getpass.getuser()
@@ -88,6 +95,16 @@ class Clip(object):
         # Save clip data
         with open(os.path.join(root, "clip.json"), "w") as f:
             json.dump(s.clipData, f)
+    def __del__(s):
+        """
+        Clean up any files left over
+        """
+        if s.cleanup:
+            for f in s.cleanup:
+                if os.path.isfile(f):
+                    os.remove(f)
+                elif os.path.isdir(f):
+                    os.rmdir(f)
 
 class Character(object):
     """
