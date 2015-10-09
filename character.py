@@ -69,7 +69,7 @@ class Clip(object):
         Dump images into a temporary location to be accessable.
         Return a function to clean up the cache.
         """
-        result = s.character.saveFile.cache([v for k, v ins.metadata.items()] if "thumb" in k)
+        result = s.character.saveFile.cache([v for k, v in s.metadata.items() if "thumb" in k])
         if result: return files, cleanup
         """
         Run by the Character. Save the data to its own space
@@ -113,6 +113,7 @@ class Character(object):
     def __init__(s, path, software):
         s.saveFile = saveFile.SaveFile(path) # Path to savefile
         s.metadata = {
+            "name"        : os.path.basename(os.path.splitext(path)[0]),
             "createdOn"   : time.time(),
             "createdBy"   : getpass.getuser(),
             "modifiedOn"  : time.time(),

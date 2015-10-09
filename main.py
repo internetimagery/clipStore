@@ -50,7 +50,8 @@ class Main(object):
                     c,
                     s.characterEdit,
                     s.clipEdit,
-                    s.clipPose
+                    s.clipPose,
+                    s.clipDel
                     )
             else:
                 raise RuntimeError, "File was not made with %s!" % s.software.title()
@@ -62,6 +63,8 @@ class Main(object):
         print "editclip"
     def clipPose(s, clip):
         print "pose out clip"
+    def clipDel(s, clip):
+        print "delete clip!"
 
 ### TESTING
 # import animCopy.view.maya as view

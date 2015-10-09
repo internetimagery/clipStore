@@ -4,7 +4,7 @@ import maya.cmds as cmds
 
 i18n = {
     "clips" : {
-        "title"         : "Clips Menu",
+        "title"         : "Clips",
         "editChar"      : "Click to change the characters details",
         "newClip"       : "Capture a new Clip!",
         "addClip"       : "Click to apply the Clip to the Character.\nRight click for more options...",
@@ -16,10 +16,6 @@ i18n = {
     }
 }
 
-# Only pose selection
-# Ignore selection
-# Pose all
-
 class Clips(object):
     def __init__(s, i18n, char, requestCharEdit, requestClipEdit, sendClip, sendDelClip):
         s.i18n = i18n
@@ -27,13 +23,27 @@ class Clips(object):
         s.requestClipEdit = requestClipEdit # We're asking to edit the clip
         s.sendDelClip = sendDelClip
         s.sendClip = sendClip # User wants to place the clip
-        name = "CHARNAME"
+        s.clips = [] # Init clips!
+        name = s.char.metadata["name"].title()
 
         s.winName = "%sWin" % name
         if cmds.window(s.winName, ex=True):
             cmds.deleteUI(s.winName)
-        s.window = cmds.window(s.winName, rtf=True, t=s.i18n["title"])
+        s.window = cmds.window(s.winName, rtf=True, t=1"%s %s" % (name, i18n["title"]))
         cmds.columnLayout(adj=True)
+        cmds.floatSlider(
+            min=50,
+            max=200,
+            v=100,
+            dc=s.sizeClips,
+            h=20
+            )
+        cmds.frameLayout(l=i18n["moreInfo"], font="tinyBoldLabelFont")
+        cmds.scrollLayout(cr=True, mcw=400, bgc=[0.2,0.2,0.2], h=400)
+        s.wrapper = cmds.gridLayout(cwh=[100, 120], cr=True)
+        cmds.setParent("..") # Close grid
+        cmds.setParent("..") # Close Scroll
+        cmds.separator()
         cmds.rowLayout(nc=2, adj=2) # Open Row
         cmds.iconTextButton(
             ann=i18n["editChar"],
@@ -43,10 +53,10 @@ class Clips(object):
             h=50,
             w=50,
             bgc=[0.3,0.3,0.3],
-            c=requestCharEdit
+            c=lambda: s.requestCharEdit(s.char)
         )
         cmds.text(
-            l="<h1>%s</h1>" % "CHARNAME",
+            l="<h1>%s</h1>" % name,
             hl=True,
             h=50
             )
@@ -57,19 +67,11 @@ class Clips(object):
             h=50
             )
         cmds.setParent("..") # Close row
-        cmds.separator()
-        cmds.floatSlider(
-            min=50,
-            max=200,
-            v=100,
-            dc=s.sizeClips,
-            h=20
-            )
-        cmds.frameLayout(l=i18n["moreInfo"], font="tinyBoldLabelFont")
-        cmds.scrollLayout(cr=True, bgc=[0.2,0.2,0.2], h=400)
-        s.wrapper = cmds.gridLayout(cwh=[100, 120], cr=True)
         cmds.showWindow(s.window)
+        cmds.scriptJob(uid=[s.window, s.cleanup], ro=True)
         s.refresh()
+    def cleanup(s):
+        print "cleanup"
     def sizeClips(s, val):
         cmds.gridLayout(s.wrapper, e=True, cwh=[val,val+20])
         if s.clips:
@@ -102,7 +104,6 @@ class Clip(object):
         cmds.columnLayout(adj=True, bgc=[0.18,0.18,0.18], p=parent)
         s.imgSmall = imgSmall
         s.imgLarge = imgLarge
-        cmds.text(l="CLIPNAME", h=20)
         s.img = cmds.iconTextButton(
             l="",
             ann=i18n["addClip"],
@@ -110,7 +111,8 @@ class Clip(object):
             image=s.imgSmall,
             c=lambda: sendClip(clip)
             )
-        cmds.popupMenu()
+        cmds.text(l="CLIPNAME", h=20)
+        cmds.popupMenu(p=s.img)
         cmds.menuItem(l="CLIPNAME", en=False, itl=True)
         cmds.menuItem(l=i18n["ignoreSel"])
         cmds.menuItem(ob=True, obi="channelBoxMedium.png")
@@ -125,8 +127,8 @@ class Clip(object):
         img = s.imgSmall if size < 150 else s.imgLarge
         cmds.iconTextButton(s.img, e=True, w=size, h=size, i=img)
 
+# #
+# def test(*args):
+#     print "edit", args
 #
-def test(*args):
-    print "edit", args
-
-Clips(i18n["clips"], None, test, test, test, test)
+# Clips(i18n["clips"], None, test, test, test, test, test)

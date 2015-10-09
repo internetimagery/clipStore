@@ -40,8 +40,12 @@ En = {
     "clips" : {
         "title"         : "Clips Menu",
         "editChar"      : "Click to change the characters details",
-        "addClip"       : "Click to add clip to the scene",
-        "editClip"      : "Edit",
-        "editClipDesc"  : "Click to change the clips details"
+        "newClip"       : "Capture a new Clip!",
+        "addClip"       : "Click to apply the Clip to the Character.\nRight click for more options...",
+        "editClip"      : "Change the clips details",
+        "deleteClip"    : "Delete the clip.",
+        "ignoreSel"     : "Apply the clip, ignoring anything selected.",
+        "includeSel"    : "Apply the clip only to things selected.",
+        "moreInfo"      : "Right click any Clip for more info and options. Drag the slider to resize clips."
     }
 }
