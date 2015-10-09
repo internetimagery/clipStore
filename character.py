@@ -1,11 +1,6 @@
 # Character. Loaded from clips file
-
-### REMOVE THIS
-import os.path
-import sys
-root = os.path.dirname(__file__)
-sys.path.append(root)
-#####
+# Created 10/10/15 Jason Dixon
+# http://internetimagery.com
 
 import reference
 import saveFile
