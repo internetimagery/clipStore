@@ -1,6 +1,6 @@
 # Pick a software and lets do this!
 
-import i18n.en as i18n # ENGLISH
+from i18n.en import En as i18n # ENGLISH
 import main
 
 def Start():

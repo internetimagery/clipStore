@@ -3,23 +3,35 @@
 import maya.cmds as cmds
 
 class FileDialog(object):
-    def load(s, i18n):
+    def __init__(s, i18n):
+        s.i18n = i18n
+    def openDir(s):
         f = cmds.fileDialog2(
             dir=cmds.workspace(q=True, rd=True),
-            caption=i18n["titleLoad"],
-            fileMode=1,
-            okCaption=i18n["loadBtn"],
-            cancelCaption=i18n["cancelBtn"],
-            fileFilter="Character File (*.clips)"
+            caption=s.i18n["openDir"],
+            fileMode=3,
+            okCaption=s.i18n["openDir"],
+            cancelCaption=s.i18n["cancelBtn"],
+            fileFilter="Character File (*.char)"
         )
         return f[0] if f else None
-    def save(s, i18n):
+    def load(s):
         f = cmds.fileDialog2(
             dir=cmds.workspace(q=True, rd=True),
-            caption=i18n["titleSave"],
+            caption=s.i18n["titleLoad"],
+            fileMode=1,
+            okCaption=s.i18n["loadBtn"],
+            cancelCaption=s.i18n["cancelBtn"],
+            fileFilter="Character File (*.char)"
+        )
+        return f[0] if f else None
+    def save(s):
+        f = cmds.fileDialog2(
+            dir=cmds.workspace(q=True, rd=True),
+            caption=s.i18n["titleSave"],
             fileMode=0,
-            okCaption=i18n["saveBtn"],
-            cancelCaption=i18n["cancelBtn"],
-            fileFilter="Character File (*.clips)"
+            okCaption=s.i18n["saveBtn"],
+            cancelCaption=s.i18n["cancelBtn"],
+            fileFilter="Character File (*.char)"
         )
         return f[0] if f else None

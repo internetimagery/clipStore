@@ -28,6 +28,13 @@ En = {
         "titleSave"     : "Save your Character",
         "loadBtn"       : "Load Character",
         "saveBtn"       : "Save Character",
-        "cancelBtn"     : "Cancel"
+        "cancelBtn"     : "Cancel",
+        "openDir"       : "Select a Folder"
+        },
+    "selector"  : {
+        "title" : "Pick a Character",
+        "none"  : "There are no Character files in this folder.",
+        "open"  : "Open a folder containing Characters",
+        "new"   : "Create a new Character."
     }
 }
