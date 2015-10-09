@@ -50,25 +50,25 @@ class Clips(object):
         cmds.setParent("..") # Close row
         cmds.rowLayout(nc=2, adj=2) # Open Row
         cmds.columnLayout(adj=True) # Open Col
-        cmds.iconTextButton(
+        s.includeSel = cmds.iconTextCheckBox(
             ann=i18n["includeSel"],
             style="iconOnly",
             font="boldLabelFont",
-            image="ghostOff.png",
+            image="out_volumeShader.png",
             h=25,
             w=50,
-            bgc=[0.1,0.1,0.1],
-            c=requestCharEdit
+            bgc=[0.3,0.3,0.3],
+            cc=s.setInclude
         )
-        cmds.iconTextButton(
+        s.ignoreSel = cmds.iconTextCheckBox(
             ann=i18n["ignoreSel"],
             style="iconOnly",
             font="boldLabelFont",
-            image="ghostOff.png",
+            image="out_useBackground.png",
             h=25,
             w=50,
-            bgc=[0.1,0.1,0.1],
-            c=requestCharEdit
+            bgc=[0.3,0.3,0.3],
+            cc=s.setIgnore
         )
         cmds.setParent("..") # Close Col
         cmds.button(
@@ -88,6 +88,12 @@ class Clips(object):
         s.wrapper = cmds.gridLayout(cwh=[100, 130], cr=True)
         cmds.showWindow(s.window)
         s.refresh()
+    def setInclude(s, val):
+        cmds.iconTextCheckBox(s.includeSel, e=True, v=val)
+        if val: s.setIgnore(False)
+    def setIgnore(s, val):
+        cmds.iconTextCheckBox(s.ignoreSel, e=True, v=val)
+        if val: s.setInclude(False)
     def sizeClips(s, val):
         cmds.gridLayout(s.wrapper, e=True, cwh=[val,val+30])
         if s.clips:
