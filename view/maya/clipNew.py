@@ -1,6 +1,7 @@
 # Create a new clip
 
 import maya.cmds as cmds
+import time
 
 class ClipNew(object):
     """
@@ -11,11 +12,36 @@ class ClipNew(object):
         s.requestThumb = requestThumb # asking for new thumbnail
         s.sendInfo = sendInfo # replying with save data
         s.data = overrides.copy() if overrides else {}
+
+        s.camName = "TempCam_%s" % int(time.time())
+        s.createCam()
+
         s.winName = "AnimNewWin"
         if cmds.window(s.winName, ex=True):
             cmds.deleteUI(s.winName)
         s.window = cmds.window(s.winName, rtf=True, t=s.i18n["title"])
-        cmds.columnLayout(adj=True)
+        mainLayout = cmds.columnLayout()
+        ## CAMERA CONTROLS
+        s.live = True # Live cam?
+        s.camLayout = cmds.paneLayout(h=500, w=500, p=mainLayout)
+        viewer = cmds.modelPanel(
+            menuBarVisible=False,
+            camera=s.camera,
+            )
+        cmds.modelEditor( # Tweak nice default visuals
+            viewer,
+            e=True,
+            grid=False,
+            da="smoothShaded",
+            allObjects=False,
+            nurbsSurfaces=True,
+            polymeshes=True,
+            subdivSurfaces=True,
+            displayTextures=True
+            )
+        cmds.columnLayout(adj=True, p=mainLayout)
+        cmds.separator()
+        ## DATA CONTROLS
         cmds.rowLayout(nc=2, adj=1)
         cmds.columnLayout(adj=True)
         s.clipname = cmds.textFieldGrp(
@@ -43,31 +69,42 @@ class ClipNew(object):
         )
         cmds.setParent("..")
         s.thumb = cmds.iconTextButton(
-            l=s.i18n["thumbNew"],
+            l=s.i18n["captureBtn"],
             ann=s.i18n["thumbDesc"],
-            style="iconOnly",
+            style="iconAndTextVertical",
             h=90,
             w=90,
             bgc=[0.2,0.2,0.2],
-            image=s.data.get("thumb", "out_snapshot.png"),
-            c=s.updateThumb
+            image="out_snapshot.png",
+            c=s.capture
         )
-        cmds.setParent("..")
-        cmds.rowLayout(nc=3, adj=1)
-        cmds.separator()
-        cmds.button(
-            l=s.i18n["save"],
-            bgc=[0.4,0.6,0.5],
-            c=lambda x: s.save(),
-            h=40
-            )
-        cmds.button(
-            l=s.i18n["cancel"],
-            bgc=[0.6,0.3,0.3],
-            c=lambda x: cmds.deleteUI(s.window),
-            h=40
-            )
         cmds.showWindow(s.window)
+        cmds.scriptJob(uid=[s.window, s.cleanup], ro=True)
+
+    def capture(s): # Ask for captures
+        if s.live:
+            s.live = False
+            cmds.iconTextButton(s.thumb, e=True, l=s.i18n["recaptureBtn"])
+        else:
+            s.live = True
+            cmds.iconTextButton(s.thumb, e=True, l=s.i18n["captureBtn"])
+        print "capture!"
+
+    def createCam(s):
+        if not cmds.objExists(s.camName):
+            s.camera = cmds.camera(n=s.camName)[0]
+        else:
+            s.camera = cmds.ls(s.camName)[0]
+        cmds.viewSet(s.camera, p=True) # Move camera to perspective position
+        cmds.setAttr("%s.focalLength" % s.camera, 500)
+        cmds.setAttr("%s.horizontalFilmAperture" % s.camera, 5)
+        cmds.setAttr("%s.verticalFilmAperture" % s.camera, 5)
+        cmds.setAttr("%s.visibility" % s.camera, 0)
+
+    def cleanup(s):
+        if cmds.objExists(s.camera):
+            cmds.delete(s.camera)
+
     def updateThumb(s):
         thumb = s.requestThumb()
         if thumb:
@@ -99,3 +136,10 @@ class ClipNew(object):
                 cmds.confirmDialog(t="oops", m="Missing a clip image.")
         else:
             cmds.confirmDialog(t="oops", m="Missing a clip name.")
+
+from animCopy.i18n.en import En as i18n
+
+def test(*arg):
+    print arg
+
+ClipNew(i18n["clipNew"], test, test)

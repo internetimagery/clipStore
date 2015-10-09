@@ -1,21 +1,18 @@
 # English Language!
 
 En = {
-    "thumbNew" : { # New Thumbnail Window
-        "title"         : "Capture Thumbnail",
-        "captureBtn"    : "Capture!"
-        },
     "clipNew"   : { # New Clip window
-        "title"         : "Create a new clip.",
+        "title"         : "Capture a new clip.",
+        "captureBtn"    : "Capture!",
+        "recaptureBtn"  : "Re-capture!",
         "clipname"      : "Name your clip",
         "clippose"      : "Create a single pose",
         "cliprange"     : "Insert framerange for clip",
-        "thumbNew"      : "Capture a new thumbnail",
         "thumbDesc"     : "Click to create a new thumbnail",
         "save"          : "SAVE CLIP",
         "cancel"        : "DONT SAVE"
         },
-    "characterNew"  : {
+    "characterNew"  : { # Character edit window
         "title"     : "Modify Character",
         "obj"       : "Add selected objects",
         "objDesc"   : "Click to add selected objects",
@@ -23,7 +20,7 @@ En = {
         "objDelDesc": "Click to delete the object.",
         "filter"    : "Include Attributes",
         },
-    "filedialog" : {
+    "filedialog" : { # File prompt
         "titleLoad"     : "Load a Character",
         "titleSave"     : "Save your Character",
         "loadBtn"       : "Load Character",
@@ -31,14 +28,14 @@ En = {
         "cancelBtn"     : "Cancel",
         "openDir"       : "Select a Folder"
         },
-    "selector"  : {
+    "selector"  : { # Character selection
         "title" : "Pick a Character",
         "none"  : "There are no Character files in this folder.",
         "open"  : "Open a folder containing Characters",
         "new"   : "Create a new Character."
         },
-    "clips" : {
-        "title"         : "Clips Menu",
+    "clips" : { # Clip list / selection
+        "title"         : "Clips",
         "editChar"      : "Click to change the characters details",
         "newClip"       : "Capture a new Clip!",
         "addClip"       : "Click to apply the Clip to the Character.\nRight click for more options...",

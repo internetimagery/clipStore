@@ -2,20 +2,6 @@
 
 import maya.cmds as cmds
 
-i18n = {
-    "clips" : {
-        "title"         : "Clips",
-        "editChar"      : "Click to change the characters details",
-        "newClip"       : "Capture a new Clip!",
-        "addClip"       : "Click to apply the Clip to the Character.\nRight click for more options...",
-        "editClip"      : "Change the clips details",
-        "deleteClip"    : "Delete the clip.",
-        "ignoreSel"     : "Apply the clip, ignoring anything selected.",
-        "includeSel"    : "Apply the clip only to things selected.",
-        "moreInfo"      : "Right click any Clip for more info and options. Drag the slider to resize clips."
-    }
-}
-
 class Clips(object):
     def __init__(s, i18n, char, requestCharEdit, requestClipEdit, sendClip, sendDelClip):
         s.i18n = i18n
@@ -127,9 +113,3 @@ class Clip(object):
     def resize(s, size):
         img = s.imgSmall if size < 150 else s.imgLarge
         cmds.iconTextButton(s.img, e=True, w=size, h=size, i=img)
-
-# #
-# def test(*args):
-#     print "edit", args
-#
-# Clips(i18n["clips"], None, test, test, test, test, test)
