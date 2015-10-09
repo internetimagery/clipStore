@@ -35,8 +35,10 @@ class SaveFile(object):
         Return function responsible for cleaning it up.
         """
         def cleanup():
-            try: shutil.rmtree(s.tempdir)
-        except IOError: pass
+            try:
+                shutil.rmtree(tmp)
+            except IOError:
+                pass
         if os.path.isfile(s.path):
             files = {}
             tmp = tempfile.mkdtemp() # Temp file
@@ -51,6 +53,10 @@ class SaveFile(object):
                 cleanup()
             s.cacheFiles.append(cleanup)
             return files, cleanup
+    def __del__(s):
+        if s.cacheFiles:
+            for c in s.cacheFiles:
+                c()
     def __enter__(s):
         """
         Open a savefile and return its temporary location using "with"

@@ -34,14 +34,9 @@ class Main(object):
         """
         path = s.view.fileDialog(s.i18n["filedialog"]).save()
         if path:
-            c = character.Character(path, s.software)
-            s.view.clips(
-                s.i18n["clips"],
-                c,
-                s.characterEdit,
-                s.clipEdit,
-                s.clipPose
-                )
+            if os.path.isfile(path): os.remove(path)
+            s.characterLoad(path)
+            # TODO add opening of character edit window here
     def characterLoad(s, path):
         """
         Open an existing character!
