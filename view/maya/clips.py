@@ -7,10 +7,11 @@ i18n = {
         "title"         : "Clips Menu",
         "editChar"      : "Click to change the characters details",
         "addClip"       : "Click to add clip to the scene",
-        "editClip"      : "Edit",
-        "editClipDesc"  : "Click to change the clips details",
-        "ignoreSel"     : "Ignore anything selected when applying a clip",
-        "includeSel"    : "Only include things selected when applying a clip"
+        "editClip"      : "Change the clips details",
+        "deleteClip"    : "Delete the clip.",
+        "ignoreSel"     : "Apply the clip, ignoring anything selected.",
+        "includeSel"    : "Apply the clip only to things selected.",
+        "moreInfo"      : "Right click any Clip for more info and options. Drag the slider to resize clips."
     }
 }
 
@@ -19,10 +20,11 @@ i18n = {
 # Pose all
 
 class Clips(object):
-    def __init__(s, i18n, char, requestCharEdit, requestClipEdit, sendClip):
+    def __init__(s, i18n, char, requestCharEdit, requestClipEdit, sendClip, sendDelClip):
         s.i18n = i18n
         s.char = char
         s.requestClipEdit = requestClipEdit # We're asking to edit the clip
+        s.sendDelClip = sendDelClip
         s.sendClip = sendClip # User wants to place the clip
         name = "clipname"
 
@@ -36,10 +38,10 @@ class Clips(object):
             ann=i18n["editChar"],
             style="iconOnly",
             font="boldLabelFont",
-            image="ghostOff.png",
+            image="smoothSkin.png",
             h=50,
             w=50,
-            bgc=[0.1,0.1,0.1],
+            bgc=[0.3,0.3,0.3],
             c=requestCharEdit
         )
         cmds.text(
@@ -54,7 +56,7 @@ class Clips(object):
             ann=i18n["includeSel"],
             style="iconOnly",
             font="boldLabelFont",
-            image="out_volumeShader.png",
+            image="channelBoxSlow.png",
             h=25,
             w=50,
             bgc=[0.3,0.3,0.3],
@@ -64,7 +66,7 @@ class Clips(object):
             ann=i18n["ignoreSel"],
             style="iconOnly",
             font="boldLabelFont",
-            image="out_useBackground.png",
+            image="channelBoxMedium.png",
             h=25,
             w=50,
             bgc=[0.3,0.3,0.3],
@@ -84,18 +86,29 @@ class Clips(object):
             dc=s.sizeClips,
             h=20
             )
+        cmds.frameLayout(l=i18n["moreInfo"], font="tinyBoldLabelFont")
         cmds.scrollLayout(cr=True, bgc=[0.2,0.2,0.2], h=400)
-        s.wrapper = cmds.gridLayout(cwh=[100, 130], cr=True)
+        s.wrapper = cmds.gridLayout(cwh=[100, 120], cr=True)
         cmds.showWindow(s.window)
         s.refresh()
     def setInclude(s, val):
-        cmds.iconTextCheckBox(s.includeSel, e=True, v=val)
+        cmds.iconTextCheckBox(
+            s.includeSel,
+            e=True,
+            bgc=[0.5,0.5,0.5] if val else [0.3,0.3,0.3],
+            v=val
+            )
         if val: s.setIgnore(False)
     def setIgnore(s, val):
-        cmds.iconTextCheckBox(s.ignoreSel, e=True, v=val)
+        cmds.iconTextCheckBox(
+            s.ignoreSel,
+            e=True,
+            bgc=[0.5,0.5,0.5] if val else [0.3,0.3,0.3],
+            v=val
+            )
         if val: s.setInclude(False)
     def sizeClips(s, val):
-        cmds.gridLayout(s.wrapper, e=True, cwh=[val,val+30])
+        cmds.gridLayout(s.wrapper, e=True, cwh=[val,val+20])
         if s.clips:
             for c in s.clips:
                 c.resize(val)
@@ -112,6 +125,7 @@ class Clips(object):
                 c,
                 s.sendClip,
                 s.requestClipEdit,
+                s.sendDelClip
                 "ghostOff.png",
                 "time.svg"
                 ))
@@ -121,10 +135,11 @@ class Clip(object):
     """
     Single clip
     """
-    def __init__(s, i18n, parent, clip, sendClip, requestClipEdit, imgSmall, imgLarge):
+    def __init__(s, i18n, parent, clip, sendClip, requestClipEdit, sendDelClip, imgSmall, imgLarge):
         cmds.columnLayout(adj=True, bgc=[0.1,0.1,0.1], p=parent)
         s.imgSmall = imgSmall
         s.imgLarge = imgLarge
+        cmds.text(l="NAME OF CLIP", h=20)
         s.img = cmds.iconTextButton(
             l="",
             ann=i18n["addClip"],
@@ -132,12 +147,16 @@ class Clip(object):
             image=s.imgSmall,
             c=lambda: sendClip(clip)
             )
-        s.btn = cmds.button(
-            l=i18n["editClip"],
-            ann=i18n["editClipDesc"],
-            h=30,
-            c=lambda x: requestClipEdit(clip)
-            )
+        cmds.popupMenu()
+        cmds.menuItem(l=i18n["ignoreSel"])
+        cmds.menuItem(ob=True, obi="channelBoxMedium.png")
+        cmds.menuItem(l=i18n["includeSel"])
+        cmds.menuItem(ob=True, obi="channelBoxSlow.png")
+        cmds.menuItem(d=True)
+        cmds.menuItem(l=i18n["editClip"])
+        cmds.menuItem(ob=True, obi="pencilCursor.png")
+        cmds.menuItem(l=i18n["deleteClip"], c=lambda: sendDelClip(clip))
+        cmds.menuItem(ob=True, obi="SP_TrashIcon.png")
     def resize(s, size):
         img = s.imgSmall if size < 150 else s.imgLarge
         cmds.iconTextButton(s.img, e=True, w=size, h=size, i=img)
@@ -146,4 +165,4 @@ class Clip(object):
 def test(*args):
     print "edit", args
 
-Clips(i18n["clips"], None, test, test, test)
+Clips(i18n["clips"], None, test, test, test, test)
