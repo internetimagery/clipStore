@@ -7,3 +7,11 @@ class Main(object):
         s.model = model
         s.software = software
         print "lets go"
+
+
+
+### TESTING
+import animCopy.view.maya as view
+import animCopy.model.maya as model
+import animCopy.i18n.en as i18n
+Main(i18n, view, model, "maya")
