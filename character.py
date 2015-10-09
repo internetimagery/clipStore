@@ -7,6 +7,7 @@ root = os.path.dirname(__file__)
 sys.path.append(root)
 #####
 
+import reference
 import saveFile
 import os.path
 import getpass
@@ -108,7 +109,7 @@ class Character(object):
             "modifiedBy"  : getpass.getuser(),
             "software"    : software
             }
-        s.reference = [] # [ [ UUID : Object ] ]
+        s.ref = reference.Reference() # Reference object
         s.clips = [] # List of clips
         # Load our Data
         with s.saveFile as sf:
@@ -117,7 +118,7 @@ class Character(object):
             s.metadata = UpdateData(metaFile, s.metadata, lambda x, y: dict(x, **y))
             # Load ID References
             refFile = os.path.join(sf, "reference.json")
-            s.reference = UpdateData(refFile, s.reference, lambda x, y: y)
+            s.ref = UpdateData(refFile, s.ref, lambda x, y: reference.Reference(y))
             # Load clips
             clipsFile = os.path.join(sf, "clips")
             if os.path.isdir(clipsFile):
@@ -142,50 +143,12 @@ class Character(object):
             # Save Reference
             refFile = os.path.join(sf, "reference.json")
             with open(refFile, "w") as f:
-                json.dump(s.reference, f)
+                json.dump(s.ref, f, cls=reference.ReferenceEncode)
             # Save Clips
             clipsFile = os.path.join(sf, "clips")
             if not os.path.isdir(clipsFile): os.mkdir(clipsFile)
             for clip in s.clips:
                 clip.save(clipsFile)
-    def getReference(s, item):
-        """
-        Add / Retrieve an item / reference
-        Using references means we can change the info in one place,
-        without breaking all the clips.
-        Excessive referencing might bulk it up a bit though...
-        """
-        if item:
-            if not s.reference: s.reference = [[],[]]
-            try: return s.reference[1][s.reference[0].index(item)]
-            except ValueError: pass
-            try: return s.reference[0][s.reference[1].index(item)]
-            except ValueError: pass
-            s.reference[0].append(str(uuid.uuid4())) # UUID
-            s.reference[1].append(item) # Add the item
-            return s.reference[0][-1]
-    def replaceReference(s, ID, item):
-        """
-        What would referencing be without the ability to replace.
-        Given the ID and item, replace!
-        """
-        if ID and item:
-            try:
-                i = s.reference[0].index(ID)
-                s.reference[1][i] = item
-            except ValueError:
-                raise RuntimeError, "ID not found in reference."
-    def removeReference(s, ID):
-        """
-        Get rid of a reference
-        """
-        if ID:
-            try:
-                i = s.reference[0].index(ID)
-                del s.reference[0][i] # Removed ID
-                del s.reference[1][i] # Remove item
-            except ValueError:
-                raise RuntimeError, "ID not found in reference."
     def createClip(s):
         """
         Create a new clip.
@@ -197,9 +160,9 @@ class Character(object):
 path = os.path.join(root, "savefile.zip")
 
 c = Character(path, "maya")
-ref = c.getReference("pSphere1")
+print c.ref
+ref = c.ref["pSphere1"]
 print ref
-c.replaceReference(ref, "pSphere3")
-print c.getReference(ref)
-print c.createClip()
+c.ref[ref] = "pSphere3"
+print c.ref[ref]
 c.save()
