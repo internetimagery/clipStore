@@ -8,9 +8,15 @@ i18n = {
         "editChar"      : "Click to change the characters details",
         "addClip"       : "Click to add clip to the scene",
         "editClip"      : "Edit",
-        "editClipDesc"  : "Click to change the clips details"
+        "editClipDesc"  : "Click to change the clips details",
+        "ignoreSel"     : "Ignore anything selected when applying a clip",
+        "includeSel"    : "Only include things selected when applying a clip"
     }
 }
+
+# Only pose selection
+# Ignore selection
+# Pose all
 
 class Clips(object):
     def __init__(s, i18n, char, requestCharEdit, requestClipEdit, sendClip):
@@ -25,12 +31,7 @@ class Clips(object):
             cmds.deleteUI(s.winName)
         s.window = cmds.window(s.winName, rtf=True, t=s.i18n["title"])
         cmds.columnLayout(adj=True)
-        cmds.rowLayout(nc=2, adj=1)
-        cmds.text(
-            l="<h1>%s</h1>" % name,
-            hl=True,
-            h=50
-            )
+        cmds.rowLayout(nc=2, adj=2) # Open Row
         cmds.iconTextButton(
             ann=i18n["editChar"],
             style="iconOnly",
@@ -41,6 +42,39 @@ class Clips(object):
             bgc=[0.1,0.1,0.1],
             c=requestCharEdit
         )
+        cmds.text(
+            l="<h1>%s</h1>" % name,
+            hl=True,
+            h=50
+            )
+        cmds.setParent("..") # Close row
+        cmds.rowLayout(nc=2, adj=2) # Open Row
+        cmds.columnLayout(adj=True) # Open Col
+        cmds.iconTextButton(
+            ann=i18n["includeSel"],
+            style="iconOnly",
+            font="boldLabelFont",
+            image="ghostOff.png",
+            h=25,
+            w=50,
+            bgc=[0.1,0.1,0.1],
+            c=requestCharEdit
+        )
+        cmds.iconTextButton(
+            ann=i18n["ignoreSel"],
+            style="iconOnly",
+            font="boldLabelFont",
+            image="ghostOff.png",
+            h=25,
+            w=50,
+            bgc=[0.1,0.1,0.1],
+            c=requestCharEdit
+        )
+        cmds.setParent("..") # Close Col
+        cmds.button(
+            l="CREATE NEW",
+            h=50
+            )
         cmds.setParent("..") # Close row
         cmds.separator()
         cmds.floatSlider(
@@ -103,7 +137,7 @@ class Clip(object):
         cmds.iconTextButton(s.img, e=True, w=size, h=size, i=img)
 
 #
-# def test(*args):
-#     print "edit", args
-#
-# Clips(i18n["clips"], None, test, test, test)
+def test(*args):
+    print "edit", args
+
+Clips(i18n["clips"], None, test, test, test)
