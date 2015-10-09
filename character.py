@@ -52,14 +52,12 @@ class Clip(object):
         s.character = character # Character that houses this clip
         s.ID = ID # Location of the clip in savefile
         s.metadata = {
-            "name"          : "CLIP", # Name of the clip
-            "length"        : 0, # Length of the clip
             "createdOn"     : time.time(),
             "createdBy"     : getpass.getuser(),
             "modifiedOn"    : time.time(),
             "modifiedBy"    : getpass.getuser(),
             "thumbSmall"    : image.small, # Thumbnail for clip
-            "thumbLarge"    : image.large
+            "thumbLarge"    : image.large # Also a thumnail
         }
         s.clipData = {} # { Obj , { Attribute, [ value, value ... ] } }
         if root: # We want to load this information. Otherwise creating new
