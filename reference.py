@@ -20,8 +20,8 @@ class Dict(collections.MutableMapping):
         if k in s.rev: return s.rev[k]
         raise KeyError, "%s not found." % k
     def __iter__(s): return iter(s.fwd)
-    def __len__(s): return len(s.fwd)
     def __repr__(s): return repr(s.fwd)
+    def __len__(s): return len(s.fwd)
     def __setitem__(s, k, v):
         try: s.__delitem__(k)
         except KeyError: pass
@@ -56,11 +56,5 @@ class ReferenceEncode(json.JSONEncoder):
     Allow encoding References
     """
     def default(s, obj):
-        if isinstance(obj, Reference): return obj._ref
+        if isinstance(obj, Reference): return obj.fwd
         return json.JSONEncoder.default(s, obj)
-
-r = Reference()
-r["gone"] = "here"
-r["another"] = 3
-del r["gone"]
-print r[3]

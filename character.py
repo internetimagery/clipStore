@@ -18,6 +18,18 @@ import uuid
 import json
 import os
 
+# Structure:
+#
+# metadata.json
+# reference.json
+# clips/
+#       clipname/
+#               metadata.json
+#               clip.json
+#               small.thumb
+#               medium.thumb
+#               large.thumb
+
 def UpdateData(filename, dataOld, func):
     """
     Update data given existing file
@@ -83,18 +95,6 @@ class Clip(object):
         # Save clip data
         with open(os.path.join(root, "clip.json"), "w") as f:
             json.dump(s.clipData, f)
-
-# Structure:
-#
-# metadata.json
-# reference.json
-# clips/
-#       clipname/
-#               metadata.json
-#               clip.json
-#               small.thumb
-#               medium.thumb
-#               large.thumb
 
 class Character(object):
     """
