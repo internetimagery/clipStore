@@ -102,7 +102,7 @@ class Clip(object):
         img = s.imgSmall if size < 150 else s.imgLarge
         cmds.iconTextButton(s.img, e=True, w=size, h=size, i=img)
 
-# 
+#
 # def test(*args):
 #     print "edit", args
 #

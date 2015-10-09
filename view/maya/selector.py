@@ -48,7 +48,7 @@ class Selector(object):
             def load():
                 s.sendOpen(f)
             cmds.iconTextButton(
-                l=os.path.basename(os.path.splitext(f)[0]),
+                l=os.path.basename(os.path.splitext(f)[0]).title(),
                 style="iconAndTextHorizontal",
                 font="boldLabelFont",
                 image="polyColorSetEditor.png",

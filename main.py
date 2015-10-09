@@ -38,15 +38,29 @@ class Main(object):
             s.view.clips(
                 s.i18n["clips"],
                 c,
-                characterEdit,
-                clipEdit,
-                clipPose
+                s.characterEdit,
+                s.clipEdit,
+                s.clipPose
                 )
     def characterLoad(s, path):
         """
         Open an existing character!
         """
-        print "opening char", path
+        path = os.path.realpath(path)
+        if os.path.isfile(path):
+            c = character.Character(path, s.software)
+            if c.metadata["software"] == s.software:
+                s.view.clips(
+                    s.i18n["clips"],
+                    c,
+                    s.characterEdit,
+                    s.clipEdit,
+                    s.clipPose
+                    )
+            else:
+                raise RuntimeError, "File was not made with %s!" % s.software.title()
+        else:
+            raise IOError, "File not found. %s" % path
     def characterEdit(s, char):
         print "edit char"
     def clipEdit(s, clip):
