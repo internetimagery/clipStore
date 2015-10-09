@@ -39,6 +39,19 @@ class ClipNew(object):
             subdivSurfaces=True,
             displayTextures=True
             )
+        s.previewLayout = cmds.columnLayout(
+            h=500,
+            w=500,
+            p=mainLayout,
+            m=False
+            )
+        s.preview = cmds.iconTextStaticLabel(
+            style="iconOnly",
+            h=500,
+            w=500,
+            bgc=[0.2,0.2,0.2],
+            image="out_snapshot.png"
+        )
         cmds.columnLayout(adj=True, p=mainLayout)
         cmds.separator()
         ## DATA CONTROLS
@@ -84,11 +97,14 @@ class ClipNew(object):
     def capture(s): # Ask for captures
         if s.live:
             s.live = False
+            cmds.layout(s.camLayout, e=True, m=False)
+            cmds.layout(s.previewLayout, e=True, m=True)
             cmds.iconTextButton(s.thumb, e=True, l=s.i18n["recaptureBtn"])
         else:
             s.live = True
+            cmds.layout(s.previewLayout, e=True, m=False)
+            cmds.layout(s.camLayout, e=True, m=True)
             cmds.iconTextButton(s.thumb, e=True, l=s.i18n["captureBtn"])
-        print "capture!"
 
     def createCam(s):
         if not cmds.objExists(s.camName):
@@ -102,6 +118,7 @@ class ClipNew(object):
         cmds.setAttr("%s.visibility" % s.camera, 0)
 
     def cleanup(s):
+        # Remove temporary camera
         if cmds.objExists(s.camera):
             cmds.delete(s.camera)
 
