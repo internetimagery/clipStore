@@ -7,11 +7,11 @@ class ClipNew(object):
     """
     Create or edit an Animation
     """
-    def __init__(s, i18n, requestThumb, sendInfo, overrides=None):
+    def __init__(s, i18n, requestThumb, sendInfo):
         s.i18n = i18n
         s.requestThumb = requestThumb # asking for new thumbnail
         s.sendInfo = sendInfo # replying with save data
-        s.data = overrides.copy() if overrides else {}
+        s.data = {}
 
         s.camName = "TempCam_%s" % int(time.time())
         s.createCam()

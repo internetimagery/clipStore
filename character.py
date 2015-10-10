@@ -17,6 +17,7 @@ import os
 #
 # metadata.json
 # reference.json
+# data.json
 # clips/
 #       clipname/
 #               metadata.json
@@ -112,6 +113,7 @@ class Character(object):
             "software"    : software
             }
         s.ref = reference.Reference() # Reference object
+        s.data = {} # Storage
         s.clips = [] # List of clips
         # Load our Data
         with s.saveFile as sf:
@@ -121,6 +123,9 @@ class Character(object):
             # Load ID References
             refFile = os.path.join(sf, "reference.json")
             s.ref = UpdateData(refFile, s.ref, lambda x, y: reference.Reference(y))
+            # Load Data
+            dataFile = os.path.join(sf, "data.json")
+            s.data = UpdateData(dataFile, s.data, lambda x, y: dict(x, **y))
             # Load clips
             clipsFile = os.path.join(sf, "clips")
             if os.path.isdir(clipsFile):
@@ -146,6 +151,10 @@ class Character(object):
             refFile = os.path.join(sf, "reference.json")
             with open(refFile, "w") as f:
                 json.dump(s.ref, f, cls=reference.ReferenceEncode)
+            # Save Data
+            dataFile = os.path.join(sf, "metadata.json")
+            with open(dataFile, "w") as f:
+                json.dump(s.data, f)
             # Save Clips
             clipsFile = os.path.join(sf, "clips")
             if not os.path.isdir(clipsFile): os.mkdir(clipsFile)
