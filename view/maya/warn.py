@@ -2,12 +2,11 @@
 # Created 11/10/15 Jason Dixon
 # http://internetimagery.com
 
-import maya.cmds as cmds
-import traceback
-import sys
+import _sys
 
-class Safe(object):
+class Warn(object):
     def _err(s, title, message):
+        import maya.cmds as cmds
         cmds.confirmDialog(
             t="Uh oh... %s" % title,
             m=message
@@ -23,4 +22,4 @@ class Safe(object):
     def __exit__(s, *err):
         if err:
             s._err(err[0].__name__, err[1].message)
-Safe = Safe()
+_sys.modules[__name__] = Warn()
