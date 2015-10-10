@@ -1,8 +1,9 @@
 # Visual popup on errors. Not an error handler!
+# Can be used by passing the function and args to "run" or in a "with" block
 # Created 11/10/15 Jason Dixon
 # http://internetimagery.com
 
-import _sys
+import sys
 
 class Warn(object):
     def _err(s, title, message):
@@ -12,7 +13,7 @@ class Warn(object):
             m=message
         )
     def run(s, *args, **kwargs):
-        with Safe:
+        with s:
             if len(args) and callable(args[0]):
                 return args[0](*args[1:], **kwargs)
             else:
@@ -21,5 +22,5 @@ class Warn(object):
         pass
     def __exit__(s, *err):
         if err:
-            s._err(err[0].__name__, err[1].message)
-_sys.modules[__name__] = Warn()
+            s._err(err[0].__name__, str(err[1]))
+sys.modules[__name__] = Warn()

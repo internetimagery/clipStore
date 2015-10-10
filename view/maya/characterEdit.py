@@ -54,10 +54,8 @@ class CharacterEdit(object):
         cmds.scriptJob(uid=[s.window, s.save], ro=True)
         s.refresh()
     def addSelected(s):
-        try: # Filter selection
+        with view.warn:
             s.requestObjAdd() # Add to the list of objects
-        except RuntimeError as e:
-            cmds.confirmDialog(t="Oh no...", m=str(e))
     def refresh(s): # Build out GUI
         filterAtt = set()
         print s.char.data
@@ -68,6 +66,7 @@ class CharacterEdit(object):
 
 import os.path
 import animCopy.character
+import animCopy.view.maya as view
 import animCopy.model.maya as model
 path = "/home/maczone/Desktop/something.char"
 
