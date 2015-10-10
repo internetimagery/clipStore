@@ -14,9 +14,10 @@ i18n = {
 }
 
 class CharacterEdit(object):
-    def __init__(s, i18n, char):
+    def __init__(s, i18n, char, requestObjAdd):
         s.i18n = i18n
         s.char = char
+        s.requestObjAdd = requestObjAdd # Validate selection
         name = s.char.metadata["name"].title()
 
         winName = "CharacterEdit%sWin" % name
@@ -51,24 +52,48 @@ class CharacterEdit(object):
         s.retargetwrapper = cmds.scrollLayout(cr=True, bgc=[0.2,0.2,0.2])
         cmds.showWindow(s.window)
         cmds.scriptJob(uid=[s.window, s.save], ro=True)
+        s.refresh()
     def addSelected(s):
-        try:
-            sel = cmds.ls(sl=True, type="transform")
-            if sel:
-                pass
-            else: raise RuntimeError, "You need to select something. :)"
+        try: # Filter selection
+            s.requestObjAdd() # Add to the list of objects
         except RuntimeError as e:
             cmds.confirmDialog(t="Oh no...", m=str(e))
-
+    def refresh(s): # Build out GUI
+        filterAtt = set()
+        print s.char.data
+        for obj in s.char.data:
+            print obj
     def save(s):
         s.char.save()
 
 import os.path
 import animCopy.character
+import animCopy.model.maya as model
 path = "/home/maczone/Desktop/something.char"
 
+class test(object):
+    def __init__(s, char):
+        s.char = char
+    def addSelection(s):
+        """
+        Add selected objects to character
+        """
+        objs = model.selection().getSelection()
+        if objs:
+            filters = s.char.metadata.get("filters", [])
+            for obj in objs:
+                for atr in objs[obj]:
+                    objID = s.char.ref[obj]
+                    atrID = s.char.ref[atr]
+                    s.char.data[objID] = s.char.data.get(objID, {})
+                    s.char.data[objID][atrID] = False if atr in filters else True
+            return s.char.data
+        else: raise RuntimeError, "Nothing selected."
+
+
 c = animCopy.character.Character(path, "maya")
-CharacterEdit(i18n["characterEdit"], c)
+t = test(c)
+CharacterEdit(i18n["characterEdit"], c, t.addSelection)
 
 # objects, attributes in heirarchy
 # filter for attributes
