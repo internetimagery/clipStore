@@ -9,17 +9,22 @@ i18n = {
         "addBtn"    : "Add selected Objects",
         "filter"    : "Filter attributes",
         "attrs"     : "Include / Exclude objects and attributes",
-        "retarget"  : "Retarget objects and attributes.",
-        "retargetDesc": "If the objects or attributes have changed names,\nyou change swap the exsiting object for the new one."
+        "confirm"   : "Please confirm...",
+        "delDesc"   : "Remove object from Character.\nBE CAREFULL, this could break Clips.",
+        "delConfirm": "Are you sure you wish to delete this?\nIf you are replacing it with a nother object, consider Retargeting.",
+        "yes"       : "Yes",
+        "no"        : "No"
     }
 }
 
 class CharacterEdit(object):
-    def __init__(s, i18n, char, requestObjAdd, requestObjects, sendAttributeChange):
+    def __init__(s, i18n, char, requestObjects, sendNewObj, sendAttributeChange, sendObjDelete):
         s.i18n = i18n
         s.char = char
         s.requestObjects = requestObjects
+        s.sendNewObj = sendNewObj
         s.sendAttributeChange = sendAttributeChange
+        s.sendObjDelete = sendObjDelete
         name = s.char.metadata["name"].title()
 
         s.objClose = {} # Close state of obj
@@ -35,7 +40,7 @@ class CharacterEdit(object):
             image="selectByObject.png",
             style="iconAndTextHorizontal",
             h=30,
-            c=lambda: s.refresh(warn.run(requestObjAdd))
+            c=lambda: warn.run(s.refresh, s.sendSelection())
         )
         cmds.separator()
         row = cmds.rowLayout(nc=3, adj=2)
@@ -80,6 +85,33 @@ class CharacterEdit(object):
             if attrFilter:
                 for attr in attrFilter:
                     s.addAttrFilter(attr, False if attr in exclusions else True)
+    def askDeleteObj(s, obj):
+        """
+        Ask for permission to delete object. Big deal!!
+        """
+        ans = cmds.confirmDialog(
+            t=s.i18n["confirm"],
+            m=s.i18n["delConfirm"],
+            button=[s.i18n["yes"], s.i18n["no"]],
+            defaultButton=s.i18n["yes"],
+            cancelButton=s.i18n["no"],
+            dismissString=s.i18n["no"]
+            )
+        if ans == s.i18n["yes"]: # Are we ok to delete??
+            s.sendObjDelete(obj)
+
+    def sendSelection(s):
+        """
+        Send new objects from selected objects
+        """
+        selection = cmds.ls(sl=True, type="transform")
+        if selection:
+            store = {}
+            for sel in selection:
+                store[sel] = cmds.listAttr(sel, k=True)
+            s.sendNewObj(store)
+        else: raise RuntimeError, "Nothing selected."
+
     def addAttr(s, val, attr, obj):
         def boxChange(attr, val):
             s.sendAttributeChange(val, attr, obj)
@@ -87,39 +119,54 @@ class CharacterEdit(object):
         cmds.checkBox(
             l=attr,
             v=val,
-            cc=lambda x: boxChange(attr, x)
+            cc=lambda x: warn.run(boxChange, attr, x)
             )
     def addObj(s, attrs, obj):
         print s.objClose
         def changeObj(obj, val):
             s.objClose[obj] = val
         s.objClose[obj] = s.objClose.get(obj, True)
-        row = cmds.rowLayout(nc=2, adj=2, p=s.objWrapper)
-        cmds.columnLayout(adj=True)
-        cmds.button(l="del")
+        row = cmds.rowLayout(nc=3, adj=2, p=s.objWrapper)
+        cmds.columnLayout(adj=True, p=row)
+        cmds.iconTextStaticLabel(
+            l="",
+            style="iconOnly",
+            image="cube.png",
+            h=20,
+            w=20
+        )
         cmds.frameLayout(
             l=obj,
             cll=True,
             cl=s.objClose[obj],
-            cc=lambda: changeObj(obj, True),
-            ec=lambda: changeObj(obj, False),
+            cc=lambda: warn.run(changeObj, obj, True),
+            ec=lambda: warn.run(changeObj, obj, False),
+            bgc=[0.3,0.3,0.3],
             p=row
             )
         for at, val in attrs.items():
             s.addAttr(val, at, obj)
+        cmds.columnLayout(adj=True, p=row)
+        cmds.iconTextButton(
+            ann=s.i18n["delDesc"],
+            image="removeRenderable.png",
+            style="iconOnly",
+            h=20,
+            w=20,
+            c=lambda: warn.run(s.refresh, s.askDeleteObj(obj))
+        )
     def addAttrFilter(s, attr, value):
         s.filterBox[attr] = cmds.checkBox(
             l=attr,
             v=value,
             p=s.filterWrapper,
-            ofc=lambda x: s.refresh(s.sendAttributeChange(x, attr))
+            ofc=lambda x: warn.run(s.refresh, s.sendAttributeChange(x, attr))
         )
     def save(s):
         s.char.save()
 
 import os.path
 import animCopy.character
-import animCopy.model.maya as model
 path = "/home/maczone/Desktop/something.zip"
 
 class test(object):
@@ -134,20 +181,29 @@ class test(object):
         """
         return dict((s.char.ref[a], dict((s.char.ref[c], d) for c, d in b.items())) for a, b in s.char.data.items())
 
-    def addSelection(s):
+    def addObjects(s, objects):
         """
         Add selected objects to character
         Get selection should return { obj : [ attribute1, attribute2, ... ] }
         """
-        objs = model.selection().getSelection()
-        if objs:
+        if objects:
             # Grab all inactive attributes so we can skip them in the adding process
             exclusions = set([c for a, b in s.char.data.items() for c, d in b.items() if not d])
             # Create new entry
-            new = dict((s.char.ref[a], dict((s.char.ref[c], False if s.char.ref[c] in exclusions else True) for c in b)) for a, b in objs.items())
+            new = dict((s.char.ref[a], dict((s.char.ref[c], False if s.char.ref[c] in exclusions else True) for c in b)) for a, b in objects.items())
             # Add entry to existing data
             s.char.data = dict(s.char.data, **new)
         else: raise RuntimeError, "Nothing selected."
+
+    def removeObject(s, obj):
+        """
+        Remove a given object.
+        """
+        obj = s.char.ref[obj]
+        if obj in s.char.data:
+            del s.char.data[obj]
+        else:
+            raise RuntimeError, "Object not in collection."
 
     def editAttrs(s, enable, attr, obj=None):
         """
@@ -168,7 +224,8 @@ t = test(c)
 CharacterEdit(
     i18n["characterEdit"],
     c,
-    t.addSelection,
     t.sendCharData,
-    t.editAttrs
+    t.addObjects,
+    t.editAttrs,
+    t.removeObject
     )
