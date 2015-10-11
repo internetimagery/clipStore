@@ -20,6 +20,6 @@ class Selection(object):
         if sel:
             store = {}
             for s in sel:
-                store[s] = dict((k, None) for k in cmds.listAttr(s, k=True))
+                store[s] = cmds.listAttr(s, k=True)
             return store
         else: raise RuntimeError, "Nothing selected."

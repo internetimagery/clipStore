@@ -69,10 +69,10 @@ class CharacterEdit(object):
         s.clear(s.filterWrapper)
         s.clear(s.objWrapper)
         # Get data to build
-        data, filters = s.requestObjects()
-        # Build GUI Elements
-        print filters
-        attrFilter = set() # Short list of all attributes.
+        data = s.requestObjects()
+        # Create list of exclusions
+        exclusions = set([c for a, b in data.items() for c, d in b.items() if not d])
+        attrFilter = set() # Short grab all elements
         if data:
             for obj, attrs in data.items():
                 for attr, val in attrs.items():
@@ -80,13 +80,13 @@ class CharacterEdit(object):
 
             if attrFilter:
                 for attr in attrFilter:
-                    s.addAttrFilter(attr, False if attr in filters else True)
+                    s.addAttrFilter(attr, False if attr in exclusions else True)
     def addAttrFilter(s, attr, value):
         cmds.checkBox(
             l=attr,
             v=value,
             p=s.filterWrapper,
-            cc=lambda x: s.sendFilterUpdate(attr, x)
+            cc=lambda x: s.sendFilterUpdate(x, attr)
         )
 
     def save(s):
@@ -104,59 +104,46 @@ class test(object):
 
     def sendCharData(s):
         """
-        Send character data replacing ID with real names,
-        and a short list of filters.
+        Prep data, replacing references with real names.
         Data = { object : { attribute : True/False } }
-        Filters = [filter1, filter2, ... ]
         """
-        def addAttr(attr):
-            attrID = s.char.ref[attr]
-            if attr in s.char.metadata["filters"]:
-                filteredAttr.add(attrID)
-            return attrID
-        filteredAttr = set()
-        data = {}
-        if s.char.data:
-            data = dict((s.char.ref[a], dict((addAttr(c), d) for c, d in b.items())) for a, b in s.char.data.items())
-        return data, list(filteredAttr)
+        return dict((s.char.ref[a], dict((s.char.ref[c], d) for c, d in b.items())) for a, b in s.char.data.items())
 
     def addSelection(s):
         """
         Add selected objects to character
-        Get selection should return { obj : { attribute : None } }
+        Get selection should return { obj : [ attribute1, attribute2, ... ] }
         """
         objs = model.selection().getSelection()
-        from pprint import pprint
-        pprint(s.char.data)
         if objs:
-            filters = s.char.metadata.get("filters", [])
-            new = dict((s.char.ref[a], dict((s.char.ref[c], False if d in filters else True) for c, d in b.items())) for a, b in objs.items())
+            # Grab all inactive attributes so we can skip them in the adding process
+            exclusions = set([c for a, b in s.char.data.items() for c, d in b.items() if not d])
+            # Create new entry
+            new = dict((s.char.ref[a], dict((s.char.ref[c], False if s.char.ref[c] in exclusions else True) for c in b)) for a, b in objs.items())
+            # Add entry to existing data
             s.char.data = dict(s.char.data, **new)
         else: raise RuntimeError, "Nothing selected."
 
-    def addRemoveFilters(s, filterName, include):
+    def editAttrs(s, enable, attr, obj=None):
         """
-        Add or Remove a filter. A shortcut to block out chunks of attributes.
-        Filters actually saved are the inverse of what you'd consider normal.
-        Not having a filter in the list is the same as having it "on".
+        Enable or Disable attributes.
+        If no object is specified. Change in bulk.
         """
-        filterID = s.char.ref[filterName]
-        if filterID in s.char.metadata["filters"]:
-            if include:
-                s.char.metadata["filters"].remove(filterID)
-        else:
-            if not include:
-                s.char.metadata["filters"].append(filterID)
-
-
+        attr = s.char.ref[attr]
+        obj = s.char.ref[obj] if obj else None
+        for o, attrs in s.char.data.items():
+            if not obj or o == obj:
+                for at in attrs:
+                    if at == attr:
+                        s.char.data[o][at] = enable
 
 c = animCopy.character.Character(path, "maya")
 t = test(c)
-# print t.sendCharData()
+
 CharacterEdit(
     i18n["characterEdit"],
     c,
     t.addSelection,
     t.sendCharData,
-    t.addRemoveFilters
+    t.editAttrs
     )
