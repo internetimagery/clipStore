@@ -80,12 +80,14 @@ class CharacterEdit(object):
                 for attr in attrFilter:
                     s.addAttrFilter(attr, False if attr in filters else True)
     def addAttrFilter(s, attr, value):
+        def changed(val):
+            print "change", val
         cmds.checkBox(
             l=attr,
             v=value,
-            p=s.filterWrapper
+            p=s.filterWrapper,
+            cc=changed
         )
-        print attr
 
     def save(s):
         s.char.save()
@@ -125,6 +127,22 @@ class test(object):
             new = dict((s.char.ref[a], dict((s.char.ref[c], False if d in filters else True) for c, d in b.items())) for a, b in objs.items())
             s.char.data = dict(s.char.data, **new)
         else: raise RuntimeError, "Nothing selected."
+
+    def addRemoveFilters(s, filterName, remove):
+        """
+        Add or Remove a filter. A shortcut to block out chunks of attributes.
+        Filters actually saved are the inverse of what you'd consider normal.
+        Not having a filter in the list is the same as having it "on".
+        """
+        filterID = s.char.ref[filterName]
+        filterList = s.char.metadata.get("filters", [])
+        if filterID in filterList:
+            if remove:
+                s.char.metadata["filters"].remove(filterID)
+        else:
+            if not remove:
+                s.char.metadata["filters"].append(filterID)
+
 
 
 c = animCopy.character.Character(path, "maya")
