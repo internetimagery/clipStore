@@ -8,7 +8,7 @@ i18n = {
         "title"     : "Editing Character",
         "addBtn"    : "Add selected Objects",
         "filter"    : "Filter attributes",
-        "attrs"     : "Add objects and attributes",
+        "attrs"     : "Include / Exclude objects and attributes",
         "retarget"  : "Retarget objects and attributes.",
         "retargetDesc": "If the objects or attributes have changed names,\nyou change swap the exsiting object for the new one."
     }
@@ -22,15 +22,20 @@ class CharacterEdit(object):
         s.sendAttributeChange = sendAttributeChange
         name = s.char.metadata["name"].title()
 
+        s.objClose = {} # Close state of obj
+        s.filterBox = {} # Storing filter bloxes for dynamic updates
+
         winName = "CharacterEditWin"
         if cmds.window(winName, ex=True): cmds.deleteUI(winName)
         s.window = cmds.window(t="%s :: %s" % (s.i18n["title"], name), rtf=True)
         cmds.columnLayout(adj=True)
         # Top button
-        cmds.button(
-            l=i18n["addBtn"],
-            h=40,
-            c=lambda x: s.refresh(warn.run(requestObjAdd))
+        cmds.iconTextButton(
+            l=s.i18n["addBtn"],
+            image="selectByObject.png",
+            style="iconAndTextHorizontal",
+            h=30,
+            c=lambda: s.refresh(warn.run(requestObjAdd))
         )
         cmds.separator()
         row = cmds.rowLayout(nc=3, adj=2)
@@ -44,14 +49,6 @@ class CharacterEdit(object):
         cmds.text(l=i18n["attrs"])
         cmds.separator()
         s.objWrapper = cmds.scrollLayout(h=400, cr=True, bgc=[0.2,0.2,0.2])
-        # Begin retarget
-        cmds.columnLayout(
-            adj=True,
-            p=row,
-            ann=i18n["retargetDesc"])
-        cmds.text(l=i18n["retarget"])
-        cmds.separator()
-        s.retargetWrapper = cmds.scrollLayout(h=400, cr=True, bgc=[0.2,0.2,0.2])
         cmds.showWindow(s.window)
         cmds.scriptJob(uid=[s.window, s.save], ro=True)
         s.refresh()
@@ -65,9 +62,9 @@ class CharacterEdit(object):
 
     def refresh(s, *dump): # Build out GUI
         # Clear GUI
-        s.clear(s.retargetWrapper)
         s.clear(s.filterWrapper)
         s.clear(s.objWrapper)
+        s.filterBox = {}
         # Get data to build
         data = s.requestObjects()
         # Create list of exclusions
@@ -75,20 +72,49 @@ class CharacterEdit(object):
         attrFilter = set() # Short grab all elements
         if data:
             for obj, attrs in data.items():
-                for attr, val in attrs.items():
-                    attrFilter.add(attr)
+                if attrs:
+                    s.addObj(attrs, obj)
+                    for attr, val in attrs.items():
+                        attrFilter.add(attr)
 
             if attrFilter:
                 for attr in attrFilter:
                     s.addAttrFilter(attr, False if attr in exclusions else True)
-    def addAttrFilter(s, attr, value):
+    def addAttr(s, attr, val):
+        def boxChange(attr, val):
+            print "changed", val
+            if val: cmds.checkBox(s.filterBox[attr], e=True, v=True)
         cmds.checkBox(
+            l=attr,
+            v=val,
+            cc=lambda x: boxChange(attr, x)
+            )
+    def addObj(s, attrs, obj):
+        print s.objClose
+        def changeObj(obj, val):
+            print "changed", obj, val
+            s.objClose[obj] = val
+        s.objClose[obj] = s.objClose.get(obj, True)
+        row = cmds.rowLayout(nc=2, adj=2, p=s.objWrapper)
+        cmds.columnLayout(adj=True)
+        cmds.button(l="del")
+        cmds.frameLayout(
+            l=obj,
+            cll=True,
+            cl=s.objClose[obj],
+            cc=lambda: changeObj(obj, True),
+            ec=lambda: changeObj(obj, False),
+            p=row
+            )
+        for at, val in attrs.items():
+            s.addAttr(at, val)
+    def addAttrFilter(s, attr, value):
+        s.filterBox[attr] = cmds.checkBox(
             l=attr,
             v=value,
             p=s.filterWrapper,
-            cc=lambda x: s.sendAttributeChange(x, attr)
+            ofc=lambda x: s.refresh(s.sendAttributeChange(x, attr))
         )
-
     def save(s):
         s.char.save()
 
