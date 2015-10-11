@@ -28,6 +28,9 @@ class Main(object):
         if path:
             path = os.path.realpath(path)
             return [os.path.join(path, f) for f in os.listdir(path) if s.ext in f]
+
+    # CHARACTER RELATED STUFF!
+
     def characterNew(s):
         """
         Create a new character!
@@ -37,17 +40,19 @@ class Main(object):
             if os.path.isfile(path): os.remove(path)
             s.characterLoad(path)
             # TODO add opening of character edit window here
+
     def characterLoad(s, path):
         """
         Open an existing character!
+        Accepts = "path/to/file"
         """
         path = os.path.realpath(path)
         if os.path.isfile(path):
-            c = character.Character(path, s.software)
-            if c.metadata["software"] == s.software:
+            char = character.Character(path, s.software)
+            if char.metadata["software"] == s.software:
                 s.view.clips(
                     s.i18n["clips"],
-                    c,
+                    char,
                     s.characterEdit,
                     s.clipEdit,
                     s.clipPose,
@@ -57,8 +62,70 @@ class Main(object):
                 raise RuntimeError, "File was not made with %s!" % s.software.title()
         else:
             raise IOError, "File not found. %s" % path
+
     def characterEdit(s, char):
-        print "edit char"
+        """
+        Open the character editing window.
+        """
+        s.view.characterEdit(
+            s.i18n["characterEdit"],
+            char,
+            s.characterSendData,
+            s.characterAddObjects,
+            s.characterEditAttributes,
+            s.characterRemoveObject
+            )
+
+    def characterSendData(s, char):
+        """
+        Prepare data. Replacing references with actual names.
+        Sending = { object : attribute : True/False }
+        """
+        return dict((char.ref[a], dict((char.ref[c], d) for c, d in b.items())) for a, b in char.data.items())
+
+    def characterAddObjects(s, char, objects):
+        """
+        Add some new objects / attributes to the character
+        Accepts = { object : [attribute1, attribute2, ... ] }
+        """
+        if objects:
+            # Grab all inactive attributes so we can skip them in the adding process
+            exclusions = set([c for a, b in char.data.items() for c, d in b.items() if not d])
+            # Create new entry
+            new = dict((char.ref[a], dict((char.ref[c], False if char.ref[c] in exclusions else True) for c in b)) for a, b in objects.items() if a not in char.data)
+            # Add entry to existing data
+            char.data = dict(char.data, **new)
+        else: raise RuntimeError, "Nothing selected."
+
+    def characterRemoveObject(s, char, obj):
+        """
+        Remove a given object.
+        Accepts = "Object"
+        """
+        obj = char.ref[obj]
+        if obj in char.data:
+            del char.data[obj]
+        else:
+            raise RuntimeError, "Object not in collection."
+
+    def characterEditAttributes(s, char, enable, attr, obj=None):
+        """
+        Enable or Disable attributes. Singuarly if "obj" specified, otherwise in bulk.
+        Accepts =
+            enable = True/False
+            attr = "attributename"
+            obj = "objectname" or nothing
+        """
+        attr = char.ref[attr]
+        obj = char.ref[obj] if obj else None
+        for o, attrs in char.data.items():
+            if not obj or o == obj:
+                for at in attrs:
+                    if at == attr:
+                        char.data[o][at] = enable
+
+    # CLIPS STUFF HERE !!
+
     def clipEdit(s, clip):
         print "editclip"
     def clipPose(s, clip):
