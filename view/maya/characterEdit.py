@@ -15,9 +15,10 @@ i18n = {
 }
 
 class CharacterEdit(object):
-    def __init__(s, i18n, char, requestObjAdd):
+    def __init__(s, i18n, char, requestObjAdd, requestObjects):
         s.i18n = i18n
         s.char = char
+        s.requestObjects = requestObjects
         name = s.char.metadata["name"].title()
 
         winName = "CharacterEdit%sWin" % name
@@ -36,12 +37,12 @@ class CharacterEdit(object):
         cmds.columnLayout(adj=True)
         cmds.text(l=i18n["filter"])
         cmds.separator()
-        s.attrwrapper = cmds.scrollLayout(cr=True, bgc=[0.2,0.2,0.2])
+        s.filterWrapper = cmds.scrollLayout(cr=True, bgc=[0.2,0.2,0.2])
         # Begin Objects
         cmds.columnLayout(adj=True, p=row)
         cmds.text(l=i18n["attrs"])
         cmds.separator()
-        s.objwrapper = cmds.scrollLayout(cr=True, bgc=[0.2,0.2,0.2])
+        s.objWrapper = cmds.scrollLayout(cr=True, bgc=[0.2,0.2,0.2])
         # Begin retarget
         cmds.columnLayout(
             adj=True,
@@ -49,49 +50,89 @@ class CharacterEdit(object):
             ann=i18n["retargetDesc"])
         cmds.text(l=i18n["retarget"])
         cmds.separator()
-        s.retargetwrapper = cmds.scrollLayout(cr=True, bgc=[0.2,0.2,0.2])
+        s.retargetWrapper = cmds.scrollLayout(cr=True, bgc=[0.2,0.2,0.2])
         cmds.showWindow(s.window)
         cmds.scriptJob(uid=[s.window, s.save], ro=True)
         s.refresh()
-    def addSelected(s):
-        with view.warn:
-            s.requestObjAdd() # Add to the list of objects
+
+    def clear(s, element):
+        ch = cmds.layout(element, q=True, ca=True)
+        if ch:
+            for c in ch:
+                try: cmds.deleteUI(c)
+                except RuntimeError: pass
+
     def refresh(s, *dump): # Build out GUI
-        attrFilter = set()
-        print s.char.data
-        for obj in s.char.data:
-            print obj
+        # Clear GUI
+        s.clear(s.retargetWrapper)
+        s.clear(s.filterWrapper)
+        s.clear(s.objWrapper)
+        # Get data to build
+        data, filters = s.requestObjects()
+        # Build GUI Elements
+        attrFilter = set() # Short list of all attributes.
+        if data:
+            for obj, attrs in data.items():
+                for attr, val in attrs.items():
+                    attrFilter.add(attr)
+
+            if attrFilter:
+                for attr in attrFilter:
+                    s.addAttrFilter(attr, False if attr in filters else True)
+    def addAttrFilter(s, attr, value):
+        cmds.checkBox(
+            l=attr,
+            v=value,
+            p=s.filterWrapper
+        )
+        print attr
+
     def save(s):
         s.char.save()
 
 import os.path
 import animCopy.character
 import animCopy.model.maya as model
-path = "/home/maczone/Desktop/something.char"
+path = "/home/maczone/Desktop/something.zip"
 
 class test(object):
     def __init__(s, char):
         s.char = char
+
+    def sendCharData(s):
+        """
+        Send character data replacing ID with real names,
+        and a short list of filters.
+        Data = { object : { attribute : True/False } }
+        Filters = [filter1, filter2, ... ]
+        """
+        filteredAttr = set()
+        data = {}
+        if s.char.data:
+            data = dict((s.char.ref[a], dict(((s.char.ref[c],filteredAttr.add(s.char.ref[c]))[0], d) for c, d in b.items())) for a, b in s.char.data.items())
+        return data, list(filteredAttr)
+
     def addSelection(s):
         """
         Add selected objects to character
+        Get selection should return { obj : { attribute : None } }
         """
         objs = model.selection().getSelection()
+        from pprint import pprint
+        pprint(s.char.data)
         if objs:
             filters = s.char.metadata.get("filters", [])
-            for obj in objs:
-                for atr in objs[obj]:
-                    objID = s.char.ref[obj]
-                    atrID = s.char.ref[atr]
-                    s.char.data[objID] = s.char.data.get(objID, {})
-                    s.char.data[objID][atrID] = False if atr in filters else True
-            return s.char.data
+            new = dict((s.char.ref[a], dict((s.char.ref[c], False if d in filters else True) for c, d in b.items())) for a, b in objs.items())
+            s.char.data = dict(s.char.data, **new)
         else: raise RuntimeError, "Nothing selected."
 
 
 c = animCopy.character.Character(path, "maya")
 t = test(c)
-CharacterEdit(i18n["characterEdit"], c, t.addSelection)
-
-# objects, attributes in heirarchy
-# filter for attributes
+# print t.sendCharData()
+CharacterEdit(
+    i18n["characterEdit"],
+    c,
+    t.addSelection,
+    t.sendCharData
+    )

@@ -21,6 +21,6 @@ class Warn(object):
     def __enter__(s):
         pass
     def __exit__(s, eType, eName, eTrace):
-        if sType:
+        if eType:
             s._err(eType.__name__, str(eName))
 sys.modules[__name__] = Warn()

@@ -152,7 +152,7 @@ class Character(object):
             with open(refFile, "w") as f:
                 json.dump(s.ref, f, cls=reference.ReferenceEncode)
             # Save Data
-            dataFile = os.path.join(sf, "metadata.json")
+            dataFile = os.path.join(sf, "data.json")
             with open(dataFile, "w") as f:
                 json.dump(s.data, f)
             # Save Clips
