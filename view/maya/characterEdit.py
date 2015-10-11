@@ -5,15 +5,16 @@ import animCopy.view.maya.warn as warn
 
 i18n = {
     "characterEdit" : {
-        "title"     : "Editing Character",
-        "addBtn"    : "Add selected Objects",
-        "filter"    : "Filter attributes",
-        "attrs"     : "Include / Exclude objects and attributes",
-        "confirm"   : "Please confirm...",
-        "delDesc"   : "Remove object from Character.\nBE CAREFULL, this could break Clips.",
-        "delConfirm": "Are you sure you wish to delete this?\nIf you are replacing it with a nother object, consider Retargeting.",
-        "yes"       : "Yes",
-        "no"        : "No"
+        "title"         : "Editing Character",
+        "addBtn"        : "Add selected Objects",
+        "retargetBtn"   : "Retarget Objects",
+        "filter"        : "Filter attributes",
+        "attrs"         : "Include / Exclude objects and attributes",
+        "confirm"       : "Please confirm...",
+        "delDesc"       : "Remove object from Character.\nBE CAREFULL, this could break Clips.",
+        "delConfirm"    : "Are you sure you wish to delete this?\nIf you are replacing it with a nother object, consider Retargeting.",
+        "yes"           : "Yes",
+        "no"            : "No"
     }
 }
 
@@ -37,12 +38,20 @@ class CharacterEdit(object):
         # Title
         cmds.text(l="<h1>%s</h1>" % name)
         # Top button
+        cmds.rowLayout(nc=2)
         cmds.iconTextButton(
             l=s.i18n["addBtn"],
             image="selectByObject.png",
             style="iconAndTextHorizontal",
             c=lambda: warn.run(s.refresh, s.sendSelection())
         )
+        cmds.iconTextButton(
+            l=s.i18n["retargetBtn"],
+            image="geometryToBoundingBox.png",
+            style="iconAndTextHorizontal",
+            c=lambda: ""
+        )
+        cmds.setParent("..")
         cmds.separator()
         row = cmds.rowLayout(nc=3, adj=2)
         # Begin Filters
@@ -77,9 +86,11 @@ class CharacterEdit(object):
         if data:
             for obj, attrs in data.items():
                 if attrs:
-                    s.addObj(attrs, obj)
+                    # Object / Attributes
+                    atPoint = s.addObj(obj) # Build object. Return position for attributes
                     for attr, val in attrs.items():
                         attrFilter.add(attr)
+                        s.addAttr(val, attr, obj, atPoint)
 
             if attrFilter:
                 for attr in attrFilter:
@@ -111,30 +122,32 @@ class CharacterEdit(object):
             s.sendNewObj(store)
         else: raise RuntimeError, "Nothing selected."
 
-    def addAttr(s, val, attr, obj):
+    def addAttr(s, val, attr, obj, parent):
         def boxChange(attr, val):
             s.sendAttributeChange(val, attr, obj)
             if val: cmds.checkBox(s.filterBox[attr], e=True, v=True)
         cmds.checkBox(
             l=attr,
             v=val,
-            cc=lambda x: warn.run(boxChange, attr, x)
+            cc=lambda x: warn.run(boxChange, attr, x),
+            p=parent
             )
-    def addObj(s, attrs, obj):
-        print s.objClose
+    def addObj(s, obj):
         def changeObj(obj, val):
             s.objClose[obj] = val
         s.objClose[obj] = s.objClose.get(obj, True)
         row = cmds.rowLayout(nc=3, adj=2, p=s.objWrapper)
-        cmds.columnLayout(adj=True, p=row)
+        # ICON
         cmds.iconTextStaticLabel(
             l="",
             style="iconOnly",
             image="cube.png",
             h=20,
-            w=20
+            w=20,
+            p=row
         )
-        cmds.frameLayout(
+        # OBJECT
+        attrPoint = cmds.frameLayout(
             l=obj,
             cll=True,
             cl=s.objClose[obj],
@@ -143,17 +156,17 @@ class CharacterEdit(object):
             bgc=[0.3,0.3,0.3],
             p=row
             )
-        for at, val in attrs.items():
-            s.addAttr(val, at, obj)
-        cmds.columnLayout(adj=True, p=row)
+        # DELETE BUTTON
         cmds.iconTextButton(
             ann=s.i18n["delDesc"],
             image="removeRenderable.png",
             style="iconOnly",
             h=20,
             w=20,
+            p=row,
             c=lambda: warn.run(s.refresh, s.askDeleteObj(obj))
         )
+        return attrPoint
     def addAttrFilter(s, attr, value):
         s.filterBox[attr] = cmds.checkBox(
             l=attr,
