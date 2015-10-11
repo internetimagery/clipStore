@@ -15,13 +15,14 @@ i18n = {
 }
 
 class CharacterEdit(object):
-    def __init__(s, i18n, char, requestObjAdd, requestObjects):
+    def __init__(s, i18n, char, requestObjAdd, requestObjects, sendFilterUpdate):
         s.i18n = i18n
         s.char = char
         s.requestObjects = requestObjects
+        s.sendFilterUpdate = sendFilterUpdate
         name = s.char.metadata["name"].title()
 
-        winName = "CharacterEdit%sWin" % name
+        winName = "CharacterEditWin"
         if cmds.window(winName, ex=True): cmds.deleteUI(winName)
         s.window = cmds.window(t="%s :: %s" % (s.i18n["title"], name), rtf=True)
         cmds.columnLayout(adj=True)
@@ -37,12 +38,12 @@ class CharacterEdit(object):
         cmds.columnLayout(adj=True)
         cmds.text(l=i18n["filter"])
         cmds.separator()
-        s.filterWrapper = cmds.scrollLayout(cr=True, bgc=[0.2,0.2,0.2])
+        s.filterWrapper = cmds.scrollLayout(h=400, cr=True, bgc=[0.2,0.2,0.2])
         # Begin Objects
         cmds.columnLayout(adj=True, p=row)
         cmds.text(l=i18n["attrs"])
         cmds.separator()
-        s.objWrapper = cmds.scrollLayout(cr=True, bgc=[0.2,0.2,0.2])
+        s.objWrapper = cmds.scrollLayout(h=400, cr=True, bgc=[0.2,0.2,0.2])
         # Begin retarget
         cmds.columnLayout(
             adj=True,
@@ -50,7 +51,7 @@ class CharacterEdit(object):
             ann=i18n["retargetDesc"])
         cmds.text(l=i18n["retarget"])
         cmds.separator()
-        s.retargetWrapper = cmds.scrollLayout(cr=True, bgc=[0.2,0.2,0.2])
+        s.retargetWrapper = cmds.scrollLayout(h=400, cr=True, bgc=[0.2,0.2,0.2])
         cmds.showWindow(s.window)
         cmds.scriptJob(uid=[s.window, s.save], ro=True)
         s.refresh()
@@ -70,6 +71,7 @@ class CharacterEdit(object):
         # Get data to build
         data, filters = s.requestObjects()
         # Build GUI Elements
+        print filters
         attrFilter = set() # Short list of all attributes.
         if data:
             for obj, attrs in data.items():
@@ -80,13 +82,11 @@ class CharacterEdit(object):
                 for attr in attrFilter:
                     s.addAttrFilter(attr, False if attr in filters else True)
     def addAttrFilter(s, attr, value):
-        def changed(val):
-            print "change", val
         cmds.checkBox(
             l=attr,
             v=value,
             p=s.filterWrapper,
-            cc=changed
+            cc=lambda x: s.sendFilterUpdate(attr, x)
         )
 
     def save(s):
@@ -100,6 +100,7 @@ path = "/home/maczone/Desktop/something.zip"
 class test(object):
     def __init__(s, char):
         s.char = char
+        s.char.metadata["filters"] = s.char.metadata.get("filters", [])
 
     def sendCharData(s):
         """
@@ -108,10 +109,15 @@ class test(object):
         Data = { object : { attribute : True/False } }
         Filters = [filter1, filter2, ... ]
         """
+        def addAttr(attr):
+            attrID = s.char.ref[attr]
+            if attr in s.char.metadata["filters"]:
+                filteredAttr.add(attrID)
+            return attrID
         filteredAttr = set()
         data = {}
         if s.char.data:
-            data = dict((s.char.ref[a], dict(((s.char.ref[c],filteredAttr.add(s.char.ref[c]))[0], d) for c, d in b.items())) for a, b in s.char.data.items())
+            data = dict((s.char.ref[a], dict((addAttr(c), d) for c, d in b.items())) for a, b in s.char.data.items())
         return data, list(filteredAttr)
 
     def addSelection(s):
@@ -128,19 +134,18 @@ class test(object):
             s.char.data = dict(s.char.data, **new)
         else: raise RuntimeError, "Nothing selected."
 
-    def addRemoveFilters(s, filterName, remove):
+    def addRemoveFilters(s, filterName, include):
         """
         Add or Remove a filter. A shortcut to block out chunks of attributes.
         Filters actually saved are the inverse of what you'd consider normal.
         Not having a filter in the list is the same as having it "on".
         """
         filterID = s.char.ref[filterName]
-        filterList = s.char.metadata.get("filters", [])
-        if filterID in filterList:
-            if remove:
+        if filterID in s.char.metadata["filters"]:
+            if include:
                 s.char.metadata["filters"].remove(filterID)
         else:
-            if not remove:
+            if not include:
                 s.char.metadata["filters"].append(filterID)
 
 
@@ -152,5 +157,6 @@ CharacterEdit(
     i18n["characterEdit"],
     c,
     t.addSelection,
-    t.sendCharData
+    t.sendCharData,
+    t.addRemoveFilters
     )
