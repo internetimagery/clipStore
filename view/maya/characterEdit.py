@@ -34,12 +34,13 @@ class CharacterEdit(object):
         if cmds.window(winName, ex=True): cmds.deleteUI(winName)
         s.window = cmds.window(t="%s :: %s" % (s.i18n["title"], name), rtf=True)
         cmds.columnLayout(adj=True)
+        # Title
+        cmds.text(l="<h1>%s</h1>" % name)
         # Top button
         cmds.iconTextButton(
             l=s.i18n["addBtn"],
             image="selectByObject.png",
             style="iconAndTextHorizontal",
-            h=30,
             c=lambda: warn.run(s.refresh, s.sendSelection())
         )
         cmds.separator()
@@ -47,12 +48,10 @@ class CharacterEdit(object):
         # Begin Filters
         cmds.columnLayout(adj=True)
         cmds.text(l=i18n["filter"])
-        cmds.separator()
         s.filterWrapper = cmds.scrollLayout(h=400, cr=True, bgc=[0.2,0.2,0.2])
         # Begin Objects
         cmds.columnLayout(adj=True, p=row)
         cmds.text(l=i18n["attrs"])
-        cmds.separator()
         s.objWrapper = cmds.scrollLayout(h=400, cr=True, bgc=[0.2,0.2,0.2])
         cmds.showWindow(s.window)
         cmds.scriptJob(uid=[s.window, s.save], ro=True)
