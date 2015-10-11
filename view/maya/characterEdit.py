@@ -15,11 +15,11 @@ i18n = {
 }
 
 class CharacterEdit(object):
-    def __init__(s, i18n, char, requestObjAdd, requestObjects, sendFilterUpdate):
+    def __init__(s, i18n, char, requestObjAdd, requestObjects, sendAttributeChange):
         s.i18n = i18n
         s.char = char
         s.requestObjects = requestObjects
-        s.sendFilterUpdate = sendFilterUpdate
+        s.sendAttributeChange = sendAttributeChange
         name = s.char.metadata["name"].title()
 
         winName = "CharacterEditWin"
@@ -86,7 +86,7 @@ class CharacterEdit(object):
             l=attr,
             v=value,
             p=s.filterWrapper,
-            cc=lambda x: s.sendFilterUpdate(x, attr)
+            cc=lambda x: s.sendAttributeChange(x, attr)
         )
 
     def save(s):
