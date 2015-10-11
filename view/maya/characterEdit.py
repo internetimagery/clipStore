@@ -80,9 +80,9 @@ class CharacterEdit(object):
             if attrFilter:
                 for attr in attrFilter:
                     s.addAttrFilter(attr, False if attr in exclusions else True)
-    def addAttr(s, attr, val):
+    def addAttr(s, val, attr, obj):
         def boxChange(attr, val):
-            print "changed", val
+            s.sendAttributeChange(val, attr, obj)
             if val: cmds.checkBox(s.filterBox[attr], e=True, v=True)
         cmds.checkBox(
             l=attr,
@@ -92,7 +92,6 @@ class CharacterEdit(object):
     def addObj(s, attrs, obj):
         print s.objClose
         def changeObj(obj, val):
-            print "changed", obj, val
             s.objClose[obj] = val
         s.objClose[obj] = s.objClose.get(obj, True)
         row = cmds.rowLayout(nc=2, adj=2, p=s.objWrapper)
@@ -107,7 +106,7 @@ class CharacterEdit(object):
             p=row
             )
         for at, val in attrs.items():
-            s.addAttr(at, val)
+            s.addAttr(val, at, obj)
     def addAttrFilter(s, attr, value):
         s.filterBox[attr] = cmds.checkBox(
             l=attr,
