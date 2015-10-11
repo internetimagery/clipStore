@@ -1,6 +1,7 @@
 # Edit the character
 
-# import maya.cmds as cmds
+import maya.cmds as cmds
+import animCopy.view.maya.warn as warn
 
 i18n = {
     "characterEdit" : {
@@ -17,7 +18,6 @@ class CharacterEdit(object):
     def __init__(s, i18n, char, requestObjAdd):
         s.i18n = i18n
         s.char = char
-        s.requestObjAdd = requestObjAdd # Validate selection
         name = s.char.metadata["name"].title()
 
         winName = "CharacterEdit%sWin" % name
@@ -28,7 +28,7 @@ class CharacterEdit(object):
         cmds.button(
             l=i18n["addBtn"],
             h=40,
-            c=lambda x: s.addSelected()
+            c=lambda x: s.refresh(warn.run(requestObjAdd))
         )
         cmds.separator()
         row = cmds.rowLayout(nc=3, adj=2)
@@ -56,8 +56,8 @@ class CharacterEdit(object):
     def addSelected(s):
         with view.warn:
             s.requestObjAdd() # Add to the list of objects
-    def refresh(s): # Build out GUI
-        filterAtt = set()
+    def refresh(s, *dump): # Build out GUI
+        attrFilter = set()
         print s.char.data
         for obj in s.char.data:
             print obj
@@ -66,7 +66,6 @@ class CharacterEdit(object):
 
 import os.path
 import animCopy.character
-import animCopy.view.maya as view
 import animCopy.model.maya as model
 path = "/home/maczone/Desktop/something.char"
 

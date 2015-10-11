@@ -20,7 +20,7 @@ class Warn(object):
                 raise RuntimeError, "Function not provided as first argument."
     def __enter__(s):
         pass
-    def __exit__(s, *err):
-        if err:
-            s._err(err[0].__name__, str(err[1]))
+    def __exit__(s, eType, eName, eTrace):
+        if sType:
+            s._err(eType.__name__, str(eName))
 sys.modules[__name__] = Warn()
