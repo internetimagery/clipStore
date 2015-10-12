@@ -4,21 +4,6 @@ import maya.cmds as cmds
 # import animCopy.view.maya.warn as warn
 import warn
 
-i18n = {
-    "characterEdit" : {
-        "title"         : "Editing Character",
-        "addBtn"        : "Add selected Objects",
-        "retargetBtn"   : "Retarget Objects",
-        "filter"        : "Filter attributes",
-        "attrs"         : "Include / Exclude objects and attributes",
-        "confirm"       : "Please confirm...",
-        "delDesc"       : "Remove object from Character.\nBE CAREFULL, this could break Clips.",
-        "delConfirm"    : "Are you sure you wish to delete this?\nIf you are replacing it with a nother object, consider Retargeting.",
-        "yes"           : "Yes",
-        "no"            : "No"
-    }
-}
-
 class CharacterEdit(object):
     def __init__(s, i18n, char, requestRetarget, requestObjects, sendNewObj, sendAttributeChange, sendObjDelete):
         s.i18n = i18n
@@ -92,7 +77,6 @@ class CharacterEdit(object):
                     for attr, val in attrs.items():
                         attrFilter.add(attr)
                         s.addAttr(val, attr, obj, atPoint)
-
             if attrFilter:
                 attrFilter = sorted(list(attrFilter))
                 for attr in attrFilter:
@@ -179,68 +163,3 @@ class CharacterEdit(object):
         )
     def save(s):
         s.char.save()
-#
-# import os.path
-# import animCopy.character
-# path = "/home/maczone/Desktop/something.zip"
-#
-# class test(object):
-#     def __init__(s, char):
-#         s.char = char
-#         s.char.metadata["filters"] = s.char.metadata.get("filters", [])
-#
-#     def sendCharData(s):
-#         """
-#         Prep data, replacing references with real names.
-#         Data = { object : { attribute : True/False } }
-#         """
-#         return dict((s.char.ref[a], dict((s.char.ref[c], d) for c, d in b.items())) for a, b in s.char.data.items())
-#
-#     def addObjects(s, objects):
-#         """
-#         Add selected objects to character
-#         Get selection should return { obj : [ attribute1, attribute2, ... ] }
-#         """
-#         if objects:
-#             # Grab all inactive attributes so we can skip them in the adding process
-#             exclusions = set([c for a, b in s.char.data.items() for c, d in b.items() if not d])
-#             # Create new entry
-#             new = dict((s.char.ref[a], dict((s.char.ref[c], False if s.char.ref[c] in exclusions else True) for c in b)) for a, b in objects.items())
-#             # Add entry to existing data
-#             s.char.data = dict(s.char.data, **new)
-#         else: raise RuntimeError, "Nothing selected."
-#
-#     def removeObject(s, obj):
-#         """
-#         Remove a given object.
-#         """
-#         obj = s.char.ref[obj]
-#         if obj in s.char.data:
-#             del s.char.data[obj]
-#         else:
-#             raise RuntimeError, "Object not in collection."
-#
-#     def editAttrs(s, enable, attr, obj=None):
-#         """
-#         Enable or Disable attributes.
-#         If no object is specified. Change in bulk.
-#         """
-#         attr = s.char.ref[attr]
-#         obj = s.char.ref[obj] if obj else None
-#         for o, attrs in s.char.data.items():
-#             if not obj or o == obj:
-#                 for at in attrs:
-#                     if at == attr:
-#                         s.char.data[o][at] = enable
-#
-# c = animCopy.character.Character(path, "maya")
-# t = test(c)
-#
-# CharacterEdit(
-#     i18n["characterEdit"],
-#     c,
-#     t.sendCharData,
-#     t.addObjects,
-#     t.editAttrs,
-#     t.removeObject
-#     )
