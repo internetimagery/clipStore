@@ -12,13 +12,17 @@ En = {
         "save"          : "SAVE CLIP",
         "cancel"        : "DONT SAVE"
         },
-    "characterNew"  : { # Character edit window
-        "title"     : "Modify Character",
-        "obj"       : "Add selected objects",
-        "objDesc"   : "Click to add selected objects",
-        "objbtnDesc": "Click to select object.\nDouble click to rename.",
-        "objDelDesc": "Click to delete the object.",
-        "filter"    : "Include Attributes",
+    "characterEdit" : {
+        "title"         : "Editing Character",
+        "addBtn"        : "Add selected Objects",
+        "retargetBtn"   : "Retarget Objects",
+        "filter"        : "Filter attributes",
+        "attrs"         : "Include / Exclude objects and attributes",
+        "confirm"       : "Please confirm...",
+        "delDesc"       : "Remove object from Character.\nBE CAREFULL, this could break Clips.",
+        "delConfirm"    : "Are you sure you wish to delete this?\nIf you are replacing it with a nother object, consider Retargeting.",
+        "yes"           : "Yes",
+        "no"            : "No"
         },
     "filedialog" : { # File prompt
         "titleLoad"     : "Load a Character",
