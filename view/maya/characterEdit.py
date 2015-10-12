@@ -1,7 +1,6 @@
 # Edit the character
 
 import maya.cmds as cmds
-# import animCopy.view.maya.warn as warn
 import warn
 
 class CharacterEdit(object):

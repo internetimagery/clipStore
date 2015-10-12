@@ -81,7 +81,13 @@ class Main(object):
         """
         Open the character retarget window.
         """
-        raise NotImplementedError, "Not yet built. Sorry... :("
+        s.view.characterRetarget(
+            s.i18n["characterRetarget"],
+            char,
+            s.characterEdit,
+            s.characterSendData,
+            s.characterEditReference
+            )
 
     def characterSendData(s, char):
         """
@@ -130,6 +136,13 @@ class Main(object):
                 for at in attrs:
                     if at == attr:
                         char.data[o][at] = enable
+
+    def characterEditReference(s, char, old, new):
+        """
+        Change a reference to to point from one object to another.
+        """
+        print "retarget", old, new
+
 
     # CLIPS STUFF HERE !!
 
