@@ -25,15 +25,15 @@ class Timer(object):
             s.msecs = s.secs * 1000  # millisecs
             print '%s...\t\tElapsed time: %f ms' % (s.name, s.msecs)
 
-class TempPath(object):
-    """
-    Temporary path that removes itself afterwards
-    """
-    def __init__(s, path):
-        s.path = path
-    def __del__(s):
-        if os.path.isfile(s.path):
-            os.remove(s.path)
+# class TempPath(object):
+#     """
+#     Temporary path that removes itself afterwards
+#     """
+#     def __init__(s, path):
+#         s.path = path
+#     def __del__(s):
+#         if os.path.isfile(s.path):
+#             os.remove(s.path)
 
 class SaveFile(object):
     def __init__(s, path):
@@ -46,9 +46,9 @@ class SaveFile(object):
         Returns { providedPath : TempFile(actualPath) }
         """
         def copyFile(z, p):
-            with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(p)[1]) as f:
-                f.write(z.read(p))
-                result[p] = TempPath(f.name)
+            tmp = tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(p)[1])
+            tmp.write(z.read(p))
+            result[p] = tmp
         try:
             z = zipfile.ZipFile(s.path, "r")
             names = z.namelist()
