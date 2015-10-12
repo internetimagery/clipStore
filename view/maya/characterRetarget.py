@@ -185,9 +185,20 @@ class CharacterRetarget(object):
             if len(attr) == 1:
                 at = attr[0]
                 if at not in s.allItems:
-                    print "Retargeting %s to %s" % (old, at)
-                    s.sendRetarget(s.char, old, at)
-                    cmds.button(element, e=True, l=at)
+                    # ASK TO CONFIRM FIRST!!
+                    ans = cmds.confirmDialog(
+                        t=s.i18n["confirm"],
+                        m=s.i18n["targetConfirm"],
+                        button=[s.i18n["yes"], s.i18n["no"]],
+                        defaultButton=s.i18n["yes"],
+                        cancelButton=s.i18n["no"],
+                        dismissString=s.i18n["no"]
+                        )
+                    if ans == s.i18n["yes"]: # Are we ok to retarget??
+                        print "Retargeting %s to %s" % (old, at)
+                        s.sendRetarget(s.char, old, at)
+                        cmds.button(element, e=True, l=at)
+                        return
                 else:
                     raise RuntimeError, "The selected Attribute is already assigned."
         raise RuntimeError, "You must select a single attribute."
