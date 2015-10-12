@@ -46,9 +46,9 @@ class CharacterEdit(object):
         cmds.text(l=i18n["filter"])
         s.filterWrapper = cmds.scrollLayout(h=400, cr=True, bgc=[0.2,0.2,0.2])
         # Begin Objects
-        cmds.columnLayout(adj=True, p=row)
+        cmds.columnLayout(w=400, p=row)
         cmds.text(l=i18n["attrs"])
-        s.objWrapper = cmds.scrollLayout(h=400, cr=True, bgc=[0.2,0.2,0.2])
+        s.objWrapper = cmds.scrollLayout(h=400, w=400, cr=True, bgc=[0.2,0.2,0.2])
         cmds.showWindow(s.window)
         cmds.scriptJob(uid=[s.window, s.save], ro=True)
         s.refresh()
@@ -160,7 +160,8 @@ class CharacterEdit(object):
             l=attr,
             v=value,
             p=s.filterWrapper,
-            ofc=lambda x: warn.run(s.refresh, s.sendAttributeChange(s.char, x, attr))
+            # ofc=lambda x: warn.run(s.refresh, s.sendAttributeChange(s.char, x, attr))
+            cc=lambda x: warn.run(s.refresh, s.sendAttributeChange(s.char, x, attr))
         )
     def save(s):
         s.char.save()

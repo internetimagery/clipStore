@@ -27,7 +27,7 @@ class Clips(object):
             h=50,
             w=50,
             bgc=[0.3,0.3,0.3],
-            c=lambda: warn.run(requestCharEdit, s.char)
+            c=lambda: requestCharEdit(s.char)
         )
         cmds.text(
             l="<h1>%s</h1>" % name,

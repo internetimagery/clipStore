@@ -3,19 +3,25 @@
 import maya.cmds as cmds
 import os.path
 import time
+import warn
 import os
 
 class ClipEdit(object):
     """
     Create or edit an Animation
     """
-    def __init__(s, i18n, char, clip, previewImage, requestThumb):
+    def __init__(s, i18n, char, clip, previewImage, requestThumb, requestCharData):
         s.i18n = i18n
         s.char = char
         s.clip = clip
         s.previewImage = previewImage # Initial preview image
         s.requestThumb = requestThumb # asking for new thumbnail
+        s.requestCharData = requestCharData # Grab the character data
         s.winWidth = 500 # Window width
+
+        # VALIDATE BEFORE DOING ANYTHING
+        with warn:
+            s.validateObjs()
 
         s.camName = "TempCam_%s" % int(time.time())
         s.createCam()
@@ -104,7 +110,7 @@ class ClipEdit(object):
             w=90,
             bgc=[0.2,0.2,0.2],
             image="out_snapshot.png",
-            c=lambda: s.previewMode() if s.live else s.captureMode()
+            c=s.captureThumb
         )
         cmds.columnLayout(w=s.winWidth, p=mainLayout)
         cmds.button(
@@ -119,7 +125,10 @@ class ClipEdit(object):
         cmds.showWindow(s.window)
         cmds.scriptJob(uid=[s.window, s.save], ro=True)
         cmds.scriptJob(e=["quitApplication", s.cleanup], ro=True)
-
+    def validateObjs(s):
+        for obj in s.requestCharData(s.char):
+            if not cmds.objExists(obj):
+                raise RuntimeError, "%s could not be found." % obj
     def captureMode(s):
         s.live = True
         cmds.layout(s.previewLayout, e=True, m=False)
@@ -144,15 +153,14 @@ class ClipEdit(object):
         cmds.setAttr("%s.verticalFilmAperture" % s.camera, 5)
         cmds.setAttr("%s.visibility" % s.camera, 0)
 
-    def updateThumb(s):
-        thumb = s.requestThumb()
-        if thumb:
-            s.clip.metadata["thumb"] = thumb
-            cmds.iconTextButton(
-                s.thumb,
-                e=True,
-                image=thumb
-            )
+    def captureThumb(s):
+        if s.live:
+            with warn:
+                imgs = s.requestThumb(s.camera)
+                s.previewImage = imgs["thumbLarge"]
+                s.previewMode()
+        else:
+            s.captureMode()
 
     def nameChange(s, text):
         s.name = text

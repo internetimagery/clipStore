@@ -1,5 +1,6 @@
 # Lets run this thing!!
 import character
+import tempfile
 import os.path
 import os
 
@@ -47,22 +48,19 @@ class Main(object):
         Accepts = "path/to/file"
         """
         path = os.path.realpath(path)
-        if os.path.isfile(path):
-            char = character.Character(path, s.software)
-            if char.metadata["software"] == s.software:
-                s.view.clips(
-                    s.i18n["clips"],
-                    char,
-                    s.characterEdit,
-                    s.clipEdit,
-                    s.clipPose,
-                    s.clipDel
-                    )
-                return char
-            else:
-                raise RuntimeError, "File was not made with %s!" % s.software.title()
+        char = character.Character(path, s.software)
+        if char.metadata["software"] == s.software:
+            s.view.clips(
+                s.i18n["clips"],
+                char,
+                s.characterEdit,
+                s.clipEdit,
+                s.clipPose,
+                s.clipDel
+                )
+            return char
         else:
-            raise IOError, "File not found. %s" % path
+            raise RuntimeError, "File was not made with %s!" % s.software.title()
 
     def characterEdit(s, char):
         """
@@ -169,13 +167,34 @@ class Main(object):
             char,
             clip,
             preview,
-            deleteme
+            s.clipCaptureThumb,
+            s.characterSendData
             )
+
+    def clipCaptureThumb(s, camera):
+        tmpSmall = TempFile(suffix=".png")
+        tmpLarge = TempFile(suffix=".png")
+        s.model.captureThumb(100, camera, tmpSmall.name)
+        s.model.captureThumb(400, camera, tmpLarge.name)
+        return {
+            "thumbSmall" : tmpSmall,
+            "thumbLarge" : tmpLarge
+            }
+
 
     def clipPose(s, clip):
         print "pose out clip"
     def clipDel(s, clip):
         print "delete clip!"
+
+
+class TempFile(object):
+    def __init__(s, name=None, suffix=""):
+        s.name = name if name else tempfile.mkstemp(suffix=suffix)[1]
+    def __del__(s):
+        if os.path.isfile(name):
+            print "Removing: %s" % name
+            os.remove(name)
 
 ### TESTING
 # import animCopy.view.maya as view
