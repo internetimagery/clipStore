@@ -25,6 +25,16 @@ class Timer(object):
             s.msecs = s.secs * 1000  # millisecs
             print '%s...\t\tElapsed time: %f ms' % (s.name, s.msecs)
 
+class TempPath(object):
+    """
+    Temporary path that removes itself afterwards
+    """
+    def __init__(s, path):
+        s.path = path
+    def __del__(s):
+        if os.path.isfile(s.path):
+            os.remove(s.path)
+
 class SaveFile(object):
     def __init__(s, path):
         s.path = path # Where does this savefile live?
@@ -33,28 +43,27 @@ class SaveFile(object):
     def extract(s, files):
         """
         Pull out files into temporary locations.
-        Caller is responsible for cleanup!
-        Accepts dict : { fileID : localPath }
+        Returns { providedPath : TempFile(actualPath) }
         """
-        def copyFile(z, ID, p):
+        def copyFile(z, p):
             with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(p)[1]) as f:
                 f.write(z.read(p))
-                result[ID] = f.name
+                result[p] = TempPath(f.name)
         try:
             z = zipfile.ZipFile(s.path, "r")
             names = z.namelist()
             threads = []
             result = {}
-            for ID, p in files.items():
+            for p in files:
                 if p in names:
                     th = threading.Thread(
                         target=copyFile,
-                        args=(z, ID, p)
+                        args=(z, p)
                         )
                     th.start()
                     threads.append(th)
                 else:
-                    result[ID] = None
+                    result[p] = None
             if threads:
                 for th in threads:
                     th.join()
