@@ -1,7 +1,7 @@
 # English Language!
 
 En = {
-    "clipNew"   : { # New Clip window
+    "clipEdit"   : { # New Clip window
         "title"         : "Capture a new clip.",
         "captureBtn"    : "Capture!",
         "recaptureBtn"  : "Re-capture!",
@@ -43,7 +43,7 @@ En = {
         "editChar"      : "Click to change the characters details",
         "newClip"       : "Capture a new Clip!",
         "addClip"       : "Click to apply the Clip to the Character.\nRight click for more options...",
-        "editClip"      : "Change the clips details",
+        "editClip"      : "Edit this clips details",
         "deleteClip"    : "Delete the clip.",
         "ignoreSel"     : "Apply the clip, ignoring anything selected.",
         "includeSel"    : "Apply the clip only to things selected.",

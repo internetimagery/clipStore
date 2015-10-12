@@ -38,8 +38,8 @@ class Main(object):
         path = s.view.fileDialog(s.i18n["filedialog"]).save()
         if path:
             if os.path.isfile(path): os.remove(path)
-            s.characterLoad(path)
-            # TODO add opening of character edit window here
+            char = s.characterLoad(path)
+            s.characterEdit(char)
 
     def characterLoad(s, path):
         """
@@ -58,6 +58,7 @@ class Main(object):
                     s.clipPose,
                     s.clipDel
                     )
+                return char
             else:
                 raise RuntimeError, "File was not made with %s!" % s.software.title()
         else:
@@ -150,7 +151,22 @@ class Main(object):
 
     # CLIPS STUFF HERE !!
 
-    def clipEdit(s, clip):
+    def clipEdit(s, clip=None):
+        """
+        Load the clip edit window. If no existing clip is specified. Create a new one.
+        """
+        if clip.metadata.get("thumbLarge", False):
+            tempthumb = clip.char.cache({"preview": clip.metadata["thumbLarge"]})["preview"]
+        else:
+            tempthumb = None
+        s.view.clipEdit(
+            s.i18n["clipEdit"],
+            clip,
+            tempthumb
+        )
+
+
+
         print "editclip"
     def clipPose(s, clip):
         print "pose out clip"

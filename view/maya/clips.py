@@ -38,7 +38,8 @@ class Clips(object):
         cmds.columnLayout(adj=True) # Open Col
         cmds.button(
             l=i18n["newClip"],
-            h=50
+            h=50,
+            c=lambda x: warn.run(requestClipEdit)
             )
         cmds.setParent("..") # Close row
         cmds.floatSlider(
@@ -97,7 +98,7 @@ class Clip(object):
             ann=i18n["addClip"],
             style="iconOnly",#"iconAndTextVertical",
             image=s.imgSmall,
-            c=lambda: sendClip(clip)
+            c=lambda: warn.run(sendClip, clip)
             )
         cmds.text(l="CLIPNAME", h=20)
         cmds.popupMenu(p=s.img)

@@ -65,13 +65,7 @@ class Clip(object):
             clipFile = os.path.join(root, "clip.json")
             s.clipData = UpdateData(clipFile, s.clipData, lambda x, y: dict(x, **y))
         s.cleanup = [] # Temp files that might need to be cleaned?
-    def imgPull(s):
-        """
-        Dump images into a temporary location to be accessable by GUI etc.
-        Return a function to clean up the cache.
-        """
-        result = s.char.saveFile.cache([v for k, v in s.metadata.items() if "thumb" in k])
-        if result: return files, cleanup
+
     def _save(s):
         """
         Executed by the Character. Save the data to its own space
