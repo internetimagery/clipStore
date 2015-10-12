@@ -27,8 +27,8 @@ class CharacterRetarget(object):
         s.sendRetarget = sendRetarget
         name = s.char.metadata["name"].title()
 
-        s.objClose = {} # Close state of obj
-        s.filterBox = {} # Storing filter bloxes for dynamic updates
+        s.colWidth = 300
+        s.rowHeight = 30
 
         winName = "CharacterEditWin"
         if cmds.window(winName, ex=True): cmds.deleteUI(winName)
@@ -44,8 +44,6 @@ class CharacterRetarget(object):
             c=lambda: warn.run(requestEdit, s.char)
         )
         cmds.separator()
-        s.colWidth = 300
-        s.rowHeight = 30
         cmds.rowLayout(nc=3, adj=2)
         cmds.text(l=i18n["from"], w=s.colWidth)
         cmds.text(l="  >  ", h=s.rowHeight)
@@ -73,81 +71,46 @@ class CharacterRetarget(object):
         s.allItems = set()
         # Build out panels in sync
         if data:
+            attributes = set()
             for obj in sorted(data.keys()):
                 attrs = data[obj]
                 if attrs:
+                    attributes = set()
                     # Put in some objects
                     s.allItems.add(obj)
-                    put1, put2, put3 = s.addObj(obj)
-                    for attr in sorted(attrs.keys()):
+                    s.addPair(obj, s.performObjRetarget)
+                    for attr in attrs:
+                        attributes.add(attr)
                         s.allItems.add(attr)
-                        s.addAttr(attr, put1, put2, put3)
+            if attributes:
+                cmds.columnLayout(adj=True, p=s.wrapper)
+                cmds.separator()
+                for at in sorted(list(attributes)):
+                    s.addPair(at, s.performAttrRetarget)
 
-    def addObj(s, obj):
-        """
-        Add object.
-        """
-        objDown = "v %s" % obj
-        objUp = "^ %s" % obj
-        def sync():
-            val = cmds.layout(row1, q=True, m=True)
-            val = False if val else True
-            cmds.button(objBtn, e=True, l=objUp if val else objDown)
-            cmds.layout(row1, e=True, m=val)
-            cmds.layout(row2, e=True, m=val)
-            cmds.layout(row3, e=True, m=val)
-
+    def addPair(s, item, func):
         row = cmds.rowLayout(nc=3, adj=2, cw2=[s.colWidth, s.colWidth], p=s.wrapper)
         # FROM COLUMN!
-        cmds.columnLayout(adj=True, w=s.colWidth, p=row)
-        objBtn = cmds.button(
+        cmds.text(
             ann=s.i18n["fromDesc"],
-            l=objDown,
+            l=item,
             h=s.rowHeight,
+            w=s.colWidth,
             bgc=[0.3,0.3,0.3],
-            c=lambda x: sync()
-        )
-        row1 = cmds.columnLayout(adj=True, m=False)
-        # ARROW
-        cmds.columnLayout(adj=True, p=row)
+            )
         cmds.text(
             l="  >  ",
             h=s.rowHeight,
             )
-        row2 = cmds.columnLayout(adj=True, m=False)
-        # TO COLUMN
-        cmds.columnLayout(adj=True, w=s.colWidth, p=row)
         btn = cmds.button(
             ann=s.i18n["toDesc"],
-            l=obj,
+            l=item,
             h=s.rowHeight,
-            c=lambda x: warn.run(s.performObjRetarget, obj, btn)
+            c=lambda x: warn.run(func, item, btn),
+            w=s.colWidth,
             )
-        row3 = cmds.columnLayout(adj=True, m=False)
-        return row1, row2, row3
 
-    def addAttr(s, attr, parent1, parent2, parent3):
-        # Insert FROM
-        cmds.text(
-            l=attr,
-            h=s.rowHeight,
-            p=parent1
-            )
-        # Insert ARROW
-        cmds.text(
-            l="  >  ",
-            h=s.rowHeight,
-            p=parent2
-            )
-        # Insert To
-        btn = cmds.button(
-            ann=s.i18n["toDesc"],
-            l=attr,
-            h=s.rowHeight,
-            p=parent3,
-            c=lambda x: warn.run(s.performAttrRetarget, attr, btn)
-            )
-    def performObjRetarget(s, old, element):
+    def performObjRetarget(s, old, element1):
         selection = cmds.ls(sl=True, type="transform")
         if len(selection) == 1:
             sel = selection[0]
@@ -170,13 +133,13 @@ class CharacterRetarget(object):
                     attrs = cmds.listAttr(sel, k=True)
                     print "Retargeting %s to %s" % (old, sel)
                     s.sendRetarget(s.char, old, sel)
-                    cmds.button(element, e=True, l=sel)
+                    cmds.button(element1, e=True, l=sel)
             else:
                 raise RuntimeError, "The selected object is already assigned."
         else:
             raise RuntimeError, "You must select a single object."
 
-    def performAttrRetarget(s, old, element):
+    def performAttrRetarget(s, old, element1):
         selection = cmds.ls(sl=True, type="transform")
         if len(selection) == 1:
             sel = selection[0]
@@ -197,7 +160,7 @@ class CharacterRetarget(object):
                     if ans == s.i18n["yes"]: # Are we ok to retarget??
                         print "Retargeting %s to %s" % (old, at)
                         s.sendRetarget(s.char, old, at)
-                        cmds.button(element, e=True, l=at)
+                        cmds.button(element1, e=True, l=at)
                         return
                 else:
                     raise RuntimeError, "The selected Attribute is already assigned."
