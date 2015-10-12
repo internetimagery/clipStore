@@ -39,7 +39,7 @@ class Clips(object):
         cmds.button(
             l=i18n["newClip"],
             h=50,
-            c=lambda x: warn.run(requestClipEdit)
+            c=lambda x: warn.run(requestClipEdit, s.char)
             )
         cmds.setParent("..") # Close row
         cmds.floatSlider(

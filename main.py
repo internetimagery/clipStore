@@ -151,21 +151,24 @@ class Main(object):
 
     # CLIPS STUFF HERE !!
 
-    def clipEdit(s, clip=None):
+    def clipEdit(s, char, clip=None):
         """
         Load the clip edit window. If no existing clip is specified. Create a new one.
         """
-        if clip.metadata.get("thumbLarge", False):
-            tempthumb = clip.char.cache({"preview": clip.metadata["thumbLarge"]})["preview"]
-        else:
-            tempthumb = None
+        def deleteme(*args):
+            print args
+        if not clip: # No clip specified? Make one!
+            clip = char.createClip()
+        preview = clip.metadata.get("thumbLarge", False)
+        if preview:
+            preview = clip.char.cache([preview])[preview]
         s.view.clipEdit(
             s.i18n["clipEdit"],
+            char,
             clip,
-            tempthumb
-        )
-
-
+            preview,
+            deleteme
+            )
 
         print "editclip"
     def clipPose(s, clip):

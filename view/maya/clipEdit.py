@@ -9,17 +9,23 @@ class ClipEdit(object):
     """
     Create or edit an Animation
     """
-    def __init__(s, i18n, clip, previewImage, requestThumb):
+    def __init__(s, i18n, char, clip, previewImage, requestThumb):
         s.i18n = i18n
+        s.char = char
         s.clip = clip
         s.previewImage = previewImage # Initial preview image
         s.requestThumb = requestThumb # asking for new thumbnail
 
-        # Cleanup files to be removed.
-        s.cleanupFiles = [previewImage]
-
         s.camName = "TempCam_%s" % int(time.time())
         s.createCam()
+
+        # INIT DATA:
+        clip.metadata["name"] = clip.metadata.get("name", "CLIP")
+        clip.metadata["range"] = clip.metadata.get("range", [
+            cmds.playbackOptions(q=True, min=True),
+            cmds.playbackOptions(q=True, max=True)
+            ])
+
 
         s.winName = "ClipNewWin"
         if cmds.window(s.winName, ex=True):
@@ -62,30 +68,28 @@ class ClipEdit(object):
         ## DATA CONTROLS
         cmds.rowLayout(nc=2, adj=1)
         cmds.columnLayout(adj=True)
-        clip.metadata["name"] = clip.metadata.get("name", "CLIP")
         s.clipname = cmds.textFieldGrp(
             l=s.i18n["clipname"],
             text=clip.metadata["name"],
-            h=30
+            h=30,
+            tcc=s.nameChange
         )
-        clip.metadata["range"] = clip.metadata.get("range", [
-            cmds.playbackOptions(q=True, min=True),
-            cmds.playbackOptions(q=True, max=True)
-            ])
+
         r = clip.metadata["range"]
         s.clippose = cmds.checkBoxGrp(
             l=s.i18n["clippose"],
             h=30,
             v1=r[0] == r[1],
-            cc= lambda x: cmds.intFieldGrp(s.cliprange, e=True, en=False if x else True)
-        )
+            cc=s.poseChange
+            )
         s.cliprange = cmds.intFieldGrp(
             l=s.i18n["cliprange"],
             nf=2,
             v1=r[0],
             v2=r[1],
             en=False if cmds.checkBoxGrp(s.clippose, q=True, v1=True) else True,
-            h=30
+            h=30,
+            cc=s.rangeChange
         )
         cmds.setParent("..")
         s.thumb = cmds.iconTextButton(
@@ -98,7 +102,10 @@ class ClipEdit(object):
             image="out_snapshot.png",
             c=lambda: s.previewMode() if s.live else s.captureMode()
         )
-
+        if s.previewImage:
+            s.previewMode()
+        else:
+            s.captureMode()
         cmds.showWindow(s.window)
         cmds.scriptJob(uid=[s.window, s.save], ro=True)
         cmds.scriptJob(e=["quitApplication", s.cleanup], ro=True)
@@ -114,7 +121,7 @@ class ClipEdit(object):
         cmds.layout(s.previewLayout, e=True, m=False)
         cmds.layout(s.camLayout, e=True, m=True)
         cmds.iconTextButton(s.thumb, e=True, l=s.i18n["captureBtn"])
-        cmds.iconTextStaticLabel(s.preview, e=True, image=s.previewImage if s.previewImage else "out_snapshot.png")
+        cmds.iconTextStaticLabel(s.preview, e=True, image=s.previewImage.name if s.previewImage else "out_snapshot.png")
 
     def createCam(s):
         if not cmds.objExists(s.camName):
@@ -136,42 +143,31 @@ class ClipEdit(object):
                 e=True,
                 image=thumb
             )
+
+    def nameChange(s, text):
+        s.clip.metadata["name"] = text
+
+    def poseChange(s, val):
+        cmds.intFieldGrp(s.cliprange, e=True, en=False if val else True)
+        frame = cmds.currentTime(q=True)
+        clip.metadata["range"] = [frame, frame]
+
+    def rangeChange(s):
+        min_ = cmds.intFieldGrp(s.cliprange, q=True, v1=True)
+        max_ = cmds.intFieldGrp(s.cliprange, q=True, v2=True)
+        clip.metadata["range"] = sorted([min_, max_])
+
     def cleanup(s):
         # Remove temporary camera
         if cmds.objExists(s.camera):
             cmds.delete(s.camera)
-        # Remove temporary files
-        if s.cleanupFiles:
-            for f in s.cleanupFiles:
-                if os.path.isfile(f):
-                    os.remove(f)
 
     def save(s):
-        # Validate inputs
-        clipname = cmds.textFieldGrp(s.clipname, q=True, tx=True).strip()
-        if cmds.checkBoxGrp(s.clippose, q=True, v1=True):
-            frame = cmds.currentTime(q=True)
-            cliprange = [frame, frame]
-        else:
-            v1 = cmds.intFieldGrp(s.cliprange, q=True, v1=True)
-            v2 = cmds.intFieldGrp(s.cliprange, q=True, v2=True)
-            cliprange = sorted([v1, v2])
-        if clipname:
-            if s.clip.metadata.has_key("thumb"):
-                s.clip.metadata = {
-                    "clipname" : clipname,
-                    "cliprange": cliprange
-                }
-                s.sendInfo(s.clip.metadata)
-                cmds.deleteUI(s.window)
-            else:
-                cmds.confirmDialog(t="oops", m="Missing a clip image.")
-        else:
-            cmds.confirmDialog(t="oops", m="Missing a clip name.")
+        s.char.save()
 
-from animCopy.i18n.en import En as i18n
-
-def test(*arg):
-    print arg
-
-ClipNew(i18n["clipNew"], test, test)
+# from animCopy.i18n.en import En as i18n
+#
+# def test(*arg):
+#     print arg
+#
+# ClipNew(i18n["clipNew"], test, test)

@@ -46,7 +46,7 @@ class SaveFile(object):
         Returns { providedPath : TempFile(actualPath) }
         """
         def copyFile(z, p):
-            tmp = tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(p)[1])
+            tmp = tempfile.NamedTemporaryFile(suffix=os.path.splitext(p)[1])
             tmp.write(z.read(p))
             result[p] = tmp
         try:
