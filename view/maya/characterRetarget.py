@@ -64,12 +64,13 @@ class CharacterRetarget(object):
         data = s.requestObjects(s.char)
         # Build out panels in sync
         if data:
-            for obj, attrs in data.items():
+            for obj in sorted(data.keys()):
+                attrs = data[obj]
                 if attrs:
                     # Put in some objects
-                    put1, put2 = s.addObj(obj)
-                    for attr, val in attrs.items():
-                        s.addAttr(attr, put1, put2)
+                    put1, put2, put3 = s.addObj(obj)
+                    for attr in sorted(attrs.keys()):
+                        s.addAttr(attr, put1, put2, put3)
 
     def addObj(s, obj):
         """
@@ -83,8 +84,9 @@ class CharacterRetarget(object):
             cmds.button(objBtn, e=True, l=objUp if val else objDown)
             cmds.layout(row1, e=True, m=val)
             cmds.layout(row2, e=True, m=val)
+            cmds.layout(row3, e=True, m=val)
 
-        row = cmds.rowLayout(nc=2, cw2=[s.colWidth, s.colWidth], p=s.wrapper)
+        row = cmds.rowLayout(nc=3, adj=2, cw2=[s.colWidth, s.colWidth], p=s.wrapper)
         # FROM COLUMN!
         cmds.columnLayout(adj=True, w=s.colWidth, p=row)
         objBtn = cmds.button(
@@ -94,26 +96,40 @@ class CharacterRetarget(object):
             c=lambda x: sync()
         )
         row1 = cmds.columnLayout(adj=True, m=False)
+        # ARROW
+        cmds.columnLayout(adj=True, p=row)
+        cmds.text(
+            l="  >  ",
+            h=s.rowHeight,
+            )
+        row2 = cmds.columnLayout(adj=True, m=False)
         # TO COLUMN
         cmds.columnLayout(adj=True, w=s.colWidth, p=row)
         cmds.button(
             l=obj,
             h=s.rowHeight,
             )
-        row2 = cmds.columnLayout(adj=True, m=False)
-        return row1, row2
+        row3 = cmds.columnLayout(adj=True, m=False)
+        return row1, row2, row3
 
-    def addAttr(s, attr, parent1, parent2):
+    def addAttr(s, attr, parent1, parent2, parent3):
         # Insert FROM
         cmds.text(
             l=attr,
             h=s.rowHeight,
             p=parent1
             )
+        # Insert ARROW
+        cmds.text(
+            l="  >  ",
+            h=s.rowHeight,
+            p=parent2
+            )
+        # Insert To
         cmds.button(
             l=attr,
             h=s.rowHeight,
-            p=parent2
+            p=parent3
             )
 
     def save(s):
