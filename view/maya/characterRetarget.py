@@ -1,23 +1,10 @@
-# Edit the character
+# Retarget character names
+# Created 12/10/15 Jason Dixon
+# http://internetimagery.com
+
 
 import maya.cmds as cmds
-# import warn
-import animCopy.view.maya.warn as warn
-
-i18n = {
-    "characterRetarget" : {
-        "title"         : "Retarget Objects / Attributes",
-        "return"        : "Return to Character Edit window",
-        "from"          : "FROM",
-        "to"            : "TO",
-        "fromDesc"      : "Click for more information.",
-        "toDesc"        : "Select the desired object / attribute and click the button.",
-        "confirm"       : "Just confirming...",
-        "targetConfirm" : "Try and be sure the new target shares similar object names and attribute names.\nThings can break if you're not careful.\nAre you sure?",
-        "yes"           : "Yes",
-        "no"            : "No"
-    }
-}
+import warn
 
 class CharacterRetarget(object):
     def __init__(s, i18n, char, requestEdit, requestObjects, sendRetarget):

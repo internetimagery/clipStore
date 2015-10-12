@@ -1,5 +1,7 @@
 # Selection functionality
 
+# REDUNDANT? PUTTING THIS INSIDE VIEW!
+
 import maya.cmds as cmds
 
 class Selection(object):

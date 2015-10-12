@@ -1,4 +1,6 @@
 # Edit the character
+# Created 11/10/15 Jason Dixon
+# http://internetimagery.com
 
 import maya.cmds as cmds
 import warn

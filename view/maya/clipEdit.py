@@ -1,9 +1,9 @@
-# Create a new clip
+# Create a new/edit clip
 
 import maya.cmds as cmds
 import time
 
-class ClipNew(object):
+class ClipEdit(object):
     """
     Create or edit an Animation
     """
