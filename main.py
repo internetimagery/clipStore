@@ -156,12 +156,14 @@ class Main(object):
         Load the clip edit window. If no existing clip is specified. Create a new one.
         """
         def deleteme(*args):
+            print "Thing!"
             print args
         if not clip: # No clip specified? Make one!
             clip = char.createClip()
         preview = clip.metadata.get("thumbLarge", False)
         if preview:
             preview = clip.char.cache([preview])[preview]
+
         s.view.clipEdit(
             s.i18n["clipEdit"],
             char,
@@ -170,7 +172,6 @@ class Main(object):
             deleteme
             )
 
-        print "editclip"
     def clipPose(s, clip):
         print "pose out clip"
     def clipDel(s, clip):

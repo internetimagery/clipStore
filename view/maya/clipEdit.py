@@ -15,6 +15,7 @@ class ClipEdit(object):
         s.clip = clip
         s.previewImage = previewImage # Initial preview image
         s.requestThumb = requestThumb # asking for new thumbnail
+        s.winWidth = 500 # Window width
 
         s.camName = "TempCam_%s" % int(time.time())
         s.createCam()
@@ -25,7 +26,10 @@ class ClipEdit(object):
             cmds.playbackOptions(q=True, min=True),
             cmds.playbackOptions(q=True, max=True)
             ])
-
+        r = clip.metadata["range"]
+        s.pose = True if r[0] == r[1] else False # Is the range a single frame?
+        s.range = r
+        s.name = clip.metadata["name"]
 
         s.winName = "ClipNewWin"
         if cmds.window(s.winName, ex=True):
@@ -33,8 +37,8 @@ class ClipEdit(object):
         s.window = cmds.window(s.winName, rtf=True, t=s.i18n["title"])
         mainLayout = cmds.columnLayout()
         ## CAMERA CONTROLS
-        s.live = True # Live cam?
-        s.camLayout = cmds.paneLayout(h=500, w=500, p=mainLayout)
+        s.live = False if s.previewImage else True # Live cam?
+        s.camLayout = cmds.paneLayout(h=s.winWidth, w=s.winWidth, p=mainLayout)
         viewer = cmds.modelPanel(
             menuBarVisible=False,
             camera=s.camera,
@@ -51,19 +55,19 @@ class ClipEdit(object):
             displayTextures=True
             )
         s.previewLayout = cmds.columnLayout(
-            h=500,
-            w=500,
+            h=s.winWidth,
+            w=s.winWidth,
             p=mainLayout,
             m=False
             )
         s.preview = cmds.iconTextStaticLabel(
             style="iconOnly",
-            h=500,
-            w=500,
+            h=s.winWidth,
+            w=s.winWidth,
             bgc=[0.2,0.2,0.2],
             image="out_snapshot.png"
         )
-        cmds.columnLayout(adj=True, p=mainLayout)
+        cmds.columnLayout(w=s.winWidth, p=mainLayout)
         cmds.separator()
         ## DATA CONTROLS
         cmds.rowLayout(nc=2, adj=1)
@@ -102,10 +106,16 @@ class ClipEdit(object):
             image="out_snapshot.png",
             c=lambda: s.previewMode() if s.live else s.captureMode()
         )
-        if s.previewImage:
-            s.previewMode()
-        else:
+        cmds.columnLayout(w=s.winWidth, p=mainLayout)
+        cmds.button(
+            l="CAPTURE CLIP",
+            h=40,
+            w=s.winWidth
+            )
+        if s.live:
             s.captureMode()
+        else:
+            s.previewMode()
         cmds.showWindow(s.window)
         cmds.scriptJob(uid=[s.window, s.save], ro=True)
         cmds.scriptJob(e=["quitApplication", s.cleanup], ro=True)
@@ -117,10 +127,10 @@ class ClipEdit(object):
         cmds.iconTextButton(s.thumb, e=True, l=s.i18n["captureBtn"])
 
     def previewMode(s):
-        s.live = True
-        cmds.layout(s.previewLayout, e=True, m=False)
-        cmds.layout(s.camLayout, e=True, m=True)
-        cmds.iconTextButton(s.thumb, e=True, l=s.i18n["captureBtn"])
+        s.live = False
+        cmds.layout(s.camLayout, e=True, m=False)
+        cmds.layout(s.previewLayout, e=True, m=True)
+        cmds.iconTextButton(s.thumb, e=True, l=s.i18n["recaptureBtn"])
         cmds.iconTextStaticLabel(s.preview, e=True, image=s.previewImage.name if s.previewImage else "out_snapshot.png")
 
     def createCam(s):
@@ -145,17 +155,16 @@ class ClipEdit(object):
             )
 
     def nameChange(s, text):
-        s.clip.metadata["name"] = text
+        s.name = text
 
     def poseChange(s, val):
         cmds.intFieldGrp(s.cliprange, e=True, en=False if val else True)
-        frame = cmds.currentTime(q=True)
-        clip.metadata["range"] = [frame, frame]
+        s.pose = val
 
     def rangeChange(s):
         min_ = cmds.intFieldGrp(s.cliprange, q=True, v1=True)
         max_ = cmds.intFieldGrp(s.cliprange, q=True, v2=True)
-        clip.metadata["range"] = sorted([min_, max_])
+        s.range = sorted([min_, max_])
 
     def cleanup(s):
         # Remove temporary camera
@@ -163,6 +172,10 @@ class ClipEdit(object):
             cmds.delete(s.camera)
 
     def save(s):
+        print "is window here?", cmds.window(s.window, ex=True)
+        s.name
+        s.pose
+        s.range
         s.char.save()
 
 # from animCopy.i18n.en import En as i18n
