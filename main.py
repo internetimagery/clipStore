@@ -140,8 +140,12 @@ class Main(object):
     def characterEditReference(s, char, old, new):
         """
         Change a reference to to point from one object to another.
+        Accepts =
+            old = "objname"
+            new = { newObject : [attribute1, attribute2, ... ] }
         """
-        print "retarget", old, new
+        oldID = char.ref[old]
+        char.ref[oldID] = new
 
 
     # CLIPS STUFF HERE !!

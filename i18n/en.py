@@ -50,9 +50,15 @@ En = {
         "moreInfo"      : "Right click any Clip for more info and options. Drag the slider to resize clips."
     },
     "characterRetarget" : {
-        "title" : "Retarget Objects / Attributes",
-        "return": "Return to Character Edit window",
-        "from"  : "FROM",
-        "to"    : "TO"
+        "title"         : "Retarget Objects / Attributes",
+        "return"        : "Return to Character Edit window",
+        "from"          : "FROM",
+        "to"            : "TO",
+        "fromDesc"      : "Click for more information.",
+        "toDesc"        : "Select the desired object / attribute and click the button.",
+        "confirm"       : "Just confirming...",
+        "targetConfirm" : "Try and be sure the new target shares similar object names and attribute names.\nThings can break if you're not careful.\nAre you sure?",
+        "yes"           : "Yes",
+        "no"            : "No"
     }
 }

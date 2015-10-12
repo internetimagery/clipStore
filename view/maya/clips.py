@@ -23,7 +23,7 @@ class Clips(object):
             ann=i18n["editChar"],
             style="iconOnly",
             font="boldLabelFont",
-            image="smoothSkin.png",
+            image="goToBindPose.png",
             h=50,
             w=50,
             bgc=[0.3,0.3,0.3],
