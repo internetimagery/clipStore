@@ -2,6 +2,7 @@
 # Created 10/10/15 Jason Dixon
 # http://internetimagery.com
 
+import threading
 import tempfile
 import zipfile
 import os.path
@@ -28,30 +29,39 @@ class SaveFile(object):
     def __init__(s, path):
         s.path = path # Where does this savefile live?
         if os.path.isdir(s.path): raise IOError, "Path provided is not a file."
-    def pull(s, paths):
+
+    def extract(s, files):
         """
-        Pull out group of files into temporary locations.
-        Return function responsible for cleaning it up.
+        Pull out files into temporary locations.
+        Caller is responsible for cleanup!
+        Accepts dict : { fileID : localPath }
         """
-        def cleanup():
-            try:
-                shutil.rmtree(tmp)
-            except IOError:
-                pass
-        if os.path.isfile(s.path):
-            files = {}
-            tmp = tempfile.mkdtemp() # Temp file
-            try:
-                z = zipfile.ZipFile(s.path, "r")
-                names = z.namelist()
-                for path in paths:
-                    if path in names:
-                        z.extract(path, tmp)
-                        files[path] = os.path.realpath(os.path.join(tmp, path))
-            except (zipfile.BadZipfile, IOError, WindowsError):
-                cleanup()
-            s.cacheFiles.append(cleanup)
-            return files, cleanup
+        def copyFile(z, ID, p):
+            with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(p)[1]) as f:
+                f.write(z.read(p))
+                result[ID] = f.name
+        try:
+            z = zipfile.ZipFile(s.path, "r")
+            names = z.namelist()
+            threads = []
+            result = {}
+            for ID, p in files.items():
+                if p in names:
+                    th = threading.Thread(
+                        target=copyFile,
+                        args=(z, ID, p)
+                        )
+                    th.start()
+                    threads.append(th)
+                else:
+                    result[ID] = None
+            if threads:
+                for th in threads:
+                    th.join()
+            return result
+        except (zipfile.BadZipfile, IOError, OSError):
+            pass
+
     def __enter__(s):
         """
         Open a savefile and return its temporary location using "with"
@@ -62,7 +72,7 @@ class SaveFile(object):
                 with Timer("Reading file"):
                     store = zipfile.ZipFile(s.path, "r")
                     store.extractall(s.tempdir)
-            except (zipfile.BadZipfile, IOError, WindowsError):
+            except (zipfile.BadZipfile, IOError, OSError):
                 print "File corrupt :: %s." % s.path
                 name, ext = os.path.splitext(s.path)
                 shutil.move(s.path, "%s(corrupt)%s" % (name, ext))
