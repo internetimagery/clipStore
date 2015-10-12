@@ -48,5 +48,11 @@ En = {
         "ignoreSel"     : "Apply the clip, ignoring anything selected.",
         "includeSel"    : "Apply the clip only to things selected.",
         "moreInfo"      : "Right click any Clip for more info and options. Drag the slider to resize clips."
+    },
+    "characterRetarget" : {
+        "title" : "Retarget Objects / Attributes",
+        "return": "Return to Character Edit window",
+        "from"  : "FROM",
+        "to"    : "TO"
     }
 }

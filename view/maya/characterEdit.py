@@ -28,7 +28,7 @@ class CharacterEdit(object):
             l=s.i18n["addBtn"],
             image="selectByObject.png",
             style="iconAndTextHorizontal",
-            c=lambda: s.refresh(warn.run(s.sendSelection)
+            c=lambda: s.refresh(warn.run(s.sendSelection))
         )
         cmds.iconTextButton(
             l=s.i18n["retargetBtn"],
@@ -129,7 +129,7 @@ class CharacterEdit(object):
             image="cube.png",
             h=20,
             w=20,
-            c=warn.run(cmds.select, obj, r=True)
+            # c=warn.run(cmds.select, obj, r=True),
             p=row
         )
         # OBJECT
