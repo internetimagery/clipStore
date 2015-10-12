@@ -44,8 +44,8 @@ class Clip(object):
     """
     Single Clip
     """
-    def __init__(s, character, ID, root=None):
-        s.character = character # Character that houses this clip
+    def __init__(s, char, ID, root=None):
+        s.char = char # Character that houses this clip
         s.ID = ID # Location of the clip in savefile
         s.metadata = {
             "createdOn"     : time.time(),
@@ -70,7 +70,7 @@ class Clip(object):
         Dump images into a temporary location to be accessable by GUI etc.
         Return a function to clean up the cache.
         """
-        result = s.character.saveFile.cache([v for k, v in s.metadata.items() if "thumb" in k])
+        result = s.char.saveFile.cache([v for k, v in s.metadata.items() if "thumb" in k])
         if result: return files, cleanup
     def _save(s):
         """
@@ -167,3 +167,9 @@ class Character(object):
         c = Clip(s, uuid.uuid4().hex) # Create a new clip
         s.clips.append(c)
         return c
+    def cache(s, files):
+        """
+        Wrapper for savefile extract
+        Pull out requested files into temporary files.
+        """
+        return s.saveFile.extract(files)
