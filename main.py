@@ -70,11 +70,18 @@ class Main(object):
         s.view.characterEdit(
             s.i18n["characterEdit"],
             char,
+            s.characterRetarget,
             s.characterSendData,
             s.characterAddObjects,
             s.characterEditAttributes,
             s.characterRemoveObject
             )
+
+    def characterRetarget(s, char):
+        """
+        Open the character retarget window.
+        """
+        raise NotImplementedError, "Not yet built. Sorry... :("
 
     def characterSendData(s, char):
         """

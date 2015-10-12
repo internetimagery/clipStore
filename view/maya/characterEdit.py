@@ -20,7 +20,7 @@ i18n = {
 }
 
 class CharacterEdit(object):
-    def __init__(s, i18n, char, requestObjects, sendNewObj, sendAttributeChange, sendObjDelete):
+    def __init__(s, i18n, char, requestRetarget, requestObjects, sendNewObj, sendAttributeChange, sendObjDelete):
         s.i18n = i18n
         s.char = char
         s.requestObjects = requestObjects
@@ -44,13 +44,13 @@ class CharacterEdit(object):
             l=s.i18n["addBtn"],
             image="selectByObject.png",
             style="iconAndTextHorizontal",
-            c=lambda: warn.run(s.refresh, s.sendSelection())
+            c=lambda: s.refresh(warn.run(s.sendSelection)
         )
         cmds.iconTextButton(
             l=s.i18n["retargetBtn"],
             image="geometryToBoundingBox.png",
             style="iconAndTextHorizontal",
-            c=lambda: ""
+            c=lambda: (warn.run(requestRetarget, s.char), cmds.deleteUI(s.window))
         )
         cmds.setParent("..")
         cmds.separator()
@@ -94,6 +94,7 @@ class CharacterEdit(object):
                         s.addAttr(val, attr, obj, atPoint)
 
             if attrFilter:
+                attrFilter = sorted(list(attrFilter))
                 for attr in attrFilter:
                     s.addAttrFilter(attr, False if attr in exclusions else True)
     def askDeleteObj(s, obj):
@@ -139,12 +140,13 @@ class CharacterEdit(object):
         s.objClose[obj] = s.objClose.get(obj, True)
         row = cmds.rowLayout(nc=3, adj=2, p=s.objWrapper)
         # ICON
-        cmds.iconTextStaticLabel(
+        cmds.iconTextButton(
             l="",
             style="iconOnly",
             image="cube.png",
             h=20,
             w=20,
+            c=warn.run(cmds.select, obj, r=True)
             p=row
         )
         # OBJECT

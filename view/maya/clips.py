@@ -1,6 +1,7 @@
 # Clips window
 
 import maya.cmds as cmds
+import warn
 
 class Clips(object):
     def __init__(s, i18n, char, requestCharEdit, requestClipEdit, sendClip, sendDelClip):
@@ -26,7 +27,7 @@ class Clips(object):
             h=50,
             w=50,
             bgc=[0.3,0.3,0.3],
-            c=lambda: s.requestCharEdit(s.char)
+            c=lambda: warn.run(requestCharEdit, s.char)
         )
         cmds.text(
             l="<h1>%s</h1>" % name,
