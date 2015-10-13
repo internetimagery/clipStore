@@ -1,6 +1,5 @@
 # Lets run this thing!!
 import character
-import tempfile
 import os.path
 import os
 
@@ -153,48 +152,43 @@ class Main(object):
         """
         Load the clip edit window. If no existing clip is specified. Create a new one.
         """
-        def deleteme(*args):
-            print "Thing!"
-            print args
         if not clip: # No clip specified? Make one!
             clip = char.createClip()
-        preview = clip.metadata.get("thumbLarge", False)
-        if preview:
-            preview = clip.char.cache([preview])[preview]
 
         s.view.clipEdit(
             s.i18n["clipEdit"],
             char,
             clip,
-            preview,
             s.clipCaptureThumb,
-            s.characterSendData
+            s.characterSendData,
+            s.clipCaptureData
             )
 
     def clipCaptureThumb(s, camera):
-        tmpSmall = TempFile(suffix=".png")
-        tmpLarge = TempFile(suffix=".png")
-        s.model.captureThumb(100, camera, tmpSmall.name)
-        s.model.captureThumb(400, camera, tmpLarge.name)
+        """
+        Load up thumbnails
+        """
+        thumbLarge = s.model.captureThumb(400, camera)
         return {
-            "thumbSmall" : tmpSmall,
-            "thumbLarge" : tmpLarge
+            "thumbLarge" : thumbLarge
             }
+
+    def clipCaptureData(s, char, frames):
+        """
+        Capture Data
+        """
+        # Get data
+        charData = s.characterSendData(char)
+        charData = dict((a, [c for c, d in b.items() if d]) for a, b in charData)
+        print "HERE", charData
+        # data = s.model.captureClip(char, frames)
+        # print data
 
 
     def clipPose(s, clip):
         print "pose out clip"
     def clipDel(s, clip):
         print "delete clip!"
-
-
-class TempFile(object):
-    def __init__(s, name=None, suffix=""):
-        s.name = name if name else tempfile.mkstemp(suffix=suffix)[1]
-    def __del__(s):
-        if os.path.isfile(name):
-            print "Removing: %s" % name
-            os.remove(name)
 
 ### TESTING
 # import animCopy.view.maya as view

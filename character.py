@@ -44,8 +44,7 @@ class Clip(object):
     """
     Single Clip
     """
-    def __init__(s, char, ID, root=None):
-        s.char = char # Character that houses this clip
+    def __init__(s, ID, root=None):
         s.ID = ID # Location of the clip in savefile
         s.metadata = {
             "createdOn"     : time.time(),
@@ -158,7 +157,7 @@ class Character(object):
         """
         Create a new clip.
         """
-        c = Clip(s, uuid.uuid4().hex) # Create a new clip
+        c = Clip(uuid.uuid4().hex) # Create a new clip
         s.clips.append(c)
         return c
     def cache(s, files):

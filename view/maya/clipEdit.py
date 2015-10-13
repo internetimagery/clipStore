@@ -10,13 +10,14 @@ class ClipEdit(object):
     """
     Create or edit an Animation
     """
-    def __init__(s, i18n, char, clip, previewImage, requestThumb, requestCharData):
+    def __init__(s, i18n, char, clip, requestThumb, requestCharData, requestClipCapture):
         s.i18n = i18n
         s.char = char
         s.clip = clip
-        s.previewImage = previewImage # Initial preview image
         s.requestThumb = requestThumb # asking for new thumbnail
         s.requestCharData = requestCharData # Grab the character data
+        s.requestClipCapture = requestClipCapture # Grab capture information
+        s.thumbs = {} # Captured thumbs
         s.winWidth = 500 # Window width
 
         # VALIDATE BEFORE DOING ANYTHING
@@ -26,16 +27,12 @@ class ClipEdit(object):
         s.camName = "TempCam_%s" % int(time.time())
         s.createCam()
 
-        # INIT DATA:
-        clip.metadata["name"] = clip.metadata.get("name", "CLIP")
-        clip.metadata["range"] = clip.metadata.get("range", [
+        s.name = "CLIP"
+        s.pose = True
+        s.range = [
             cmds.playbackOptions(q=True, min=True),
             cmds.playbackOptions(q=True, max=True)
-            ])
-        r = clip.metadata["range"]
-        s.pose = True if r[0] == r[1] else False # Is the range a single frame?
-        s.range = r
-        s.name = clip.metadata["name"]
+        ]
 
         s.winName = "ClipNewWin"
         if cmds.window(s.winName, ex=True):
@@ -43,7 +40,6 @@ class ClipEdit(object):
         s.window = cmds.window(s.winName, rtf=True, t=s.i18n["title"])
         mainLayout = cmds.columnLayout()
         ## CAMERA CONTROLS
-        s.live = False if s.previewImage else True # Live cam?
         s.camLayout = cmds.paneLayout(h=s.winWidth, w=s.winWidth, p=mainLayout)
         viewer = cmds.modelPanel(
             menuBarVisible=False,
@@ -60,87 +56,37 @@ class ClipEdit(object):
             subdivSurfaces=True,
             displayTextures=True
             )
-        s.previewLayout = cmds.columnLayout(
-            h=s.winWidth,
-            w=s.winWidth,
-            p=mainLayout,
-            m=False
-            )
-        s.preview = cmds.iconTextStaticLabel(
-            style="iconOnly",
-            h=s.winWidth,
-            w=s.winWidth,
-            bgc=[0.2,0.2,0.2],
-            image="out_snapshot.png"
-        )
         cmds.columnLayout(w=s.winWidth, p=mainLayout)
         cmds.separator()
         ## DATA CONTROLS
-        cmds.rowLayout(nc=2, adj=1)
         cmds.columnLayout(adj=True)
         s.clipname = cmds.textFieldGrp(
             l=s.i18n["clipname"],
-            text=clip.metadata["name"],
+            text=s.name,
             h=30,
             tcc=s.nameChange
         )
-
-        r = clip.metadata["range"]
         s.clippose = cmds.checkBoxGrp(
             l=s.i18n["clippose"],
             h=30,
-            v1=r[0] == r[1],
+            v1=True,
             cc=s.poseChange
             )
         s.cliprange = cmds.intFieldGrp(
             l=s.i18n["cliprange"],
             nf=2,
-            v1=r[0],
-            v2=r[1],
-            en=False if cmds.checkBoxGrp(s.clippose, q=True, v1=True) else True,
+            v1=s.range[0],
+            v2=s.range[1],
+            en=False,
             h=30,
             cc=s.rangeChange
         )
-        cmds.setParent("..")
-        s.thumb = cmds.iconTextButton(
-            l=s.i18n["captureBtn"],
-            ann=s.i18n["thumbDesc"],
-            style="iconAndTextVertical",
-            h=90,
-            w=90,
-            bgc=[0.2,0.2,0.2],
-            image="out_snapshot.png",
-            c=s.captureThumb
-        )
-        cmds.columnLayout(w=s.winWidth, p=mainLayout)
-        cmds.button(
-            l="CAPTURE CLIP",
-            h=40,
-            w=s.winWidth
-            )
-        if s.live:
-            s.captureMode()
-        else:
-            s.previewMode()
         cmds.showWindow(s.window)
         cmds.scriptJob(uid=[s.window, s.save], ro=True)
-        cmds.scriptJob(e=["quitApplication", s.cleanup], ro=True)
     def validateObjs(s):
         for obj in s.requestCharData(s.char):
             if not cmds.objExists(obj):
                 raise RuntimeError, "%s could not be found." % obj
-    def captureMode(s):
-        s.live = True
-        cmds.layout(s.previewLayout, e=True, m=False)
-        cmds.layout(s.camLayout, e=True, m=True)
-        cmds.iconTextButton(s.thumb, e=True, l=s.i18n["captureBtn"])
-
-    def previewMode(s):
-        s.live = False
-        cmds.layout(s.camLayout, e=True, m=False)
-        cmds.layout(s.previewLayout, e=True, m=True)
-        cmds.iconTextButton(s.thumb, e=True, l=s.i18n["recaptureBtn"])
-        cmds.iconTextStaticLabel(s.preview, e=True, image=s.previewImage.name if s.previewImage else "out_snapshot.png")
 
     def createCam(s):
         if not cmds.objExists(s.camName):
@@ -152,15 +98,6 @@ class ClipEdit(object):
         cmds.setAttr("%s.horizontalFilmAperture" % s.camera, 5)
         cmds.setAttr("%s.verticalFilmAperture" % s.camera, 5)
         cmds.setAttr("%s.visibility" % s.camera, 0)
-
-    def captureThumb(s):
-        if s.live:
-            with warn:
-                imgs = s.requestThumb(s.camera)
-                s.previewImage = imgs["thumbLarge"]
-                s.previewMode()
-        else:
-            s.captureMode()
 
     def nameChange(s, text):
         s.name = text
@@ -174,21 +111,23 @@ class ClipEdit(object):
         max_ = cmds.intFieldGrp(s.cliprange, q=True, v2=True)
         s.range = sorted([min_, max_])
 
-    def cleanup(s):
+    def save(s):
+        # Grab name
+        s.clip.metadata["name"] = s.name
+        # Grab Thumbnails
+        s.clip.metadata = dict(s.clip.metadata, **s.requestThumb(s.camera))
+        # Grab range information
+        if s.pose:
+            frame = cmds.currentTime(q=True)
+            frameRange = [frame, frame]
+        else:
+            frameRange = s.range
+        # # Grab Clip
+        print "Storing Clip Data."
+        # print s.requestClipCapture(s.char, frameRange)
+        # s.clip.clipData = s.requestClipCapture(s.char, frameRange)
+        # Save information
+        # s.char.save()
         # Remove temporary camera
         if cmds.objExists(s.camera):
             cmds.delete(s.camera)
-
-    def save(s):
-        print "is window here?", cmds.window(s.window, ex=True)
-        s.name
-        s.pose
-        s.range
-        s.char.save()
-
-# from animCopy.i18n.en import En as i18n
-#
-# def test(*arg):
-#     print arg
-#
-# ClipNew(i18n["clipNew"], test, test)

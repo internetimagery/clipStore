@@ -1,8 +1,21 @@
+# Capture a thumbnail image into a temporary file
+# Created 13/10/15 Jason Dixon
+# http://internetimagery.com
 
+import os
 import os.path
+import tempfile
 import maya.cmds as cmds
 
-def CaptureThumb(pixels, camera, path):
+class Temp_Path(str):
+    def __del__(s):
+        if os.path.isfile(s):
+            os.remove(s)
+            print "Removed", s
+    def __getattribute__(s, k):
+        raise AttributeError, "\"Temp_Path\" cannot be modified with \"%s\"" % k
+
+def CaptureThumb(pixels, camera):
     """
     Capture a thumbnail
     """
@@ -18,6 +31,10 @@ def CaptureThumb(pixels, camera, path):
     frame = cmds.currentTime(q=True) # Get current time
     imgFormat = cmds.getAttr("defaultRenderGlobals.imageFormat")
     selection = cmds.ls(sl=True)
+    # Create a temporary file to hold the thumbnail
+    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
+    tmp.close()
+    path = Temp_Path(tmp.name)
     # Capture our thumbnail
     try:
         cmds.modelEditor(view, e=True, camera=camera) # Change to camera
@@ -26,12 +43,13 @@ def CaptureThumb(pixels, camera, path):
         cmds.setAttr("defaultRenderGlobals.imageFormat", 32)
         cmds.playblast(
             frame=frame, # Frame range
+            fo=True, # Force override the file if it exists
             viewer=False, # Don't popup window during render
             width=pixels*2, # Width in pixels, duh
             height=pixels*2, # Height in pixels. Who knew
             showOrnaments=False, # Hide tools, ie move tool etc
             format="image", # We just want a single image
-            completeFilename=path.replace("\\", "/") # Output file
+            completeFilename=tmp.name.replace("\\", "/") # Output file
             )
     # Put everything back as we found it.
     finally:
@@ -39,3 +57,4 @@ def CaptureThumb(pixels, camera, path):
         cmds.select(selection, r=True)
         cmds.modelEditor(view, e=True, camera=oldCam)
         cmds.modelEditor(view, e=True, displayAppearance=display)
+    return path
