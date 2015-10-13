@@ -21,12 +21,19 @@ class Main(object):
             s.characterLoad
             )
 
-    def flipData(s, data):
+    def flipData(s, char, data):
         """
         Given a structure of data. Flip the ID's and Real names.
         Structure { object : { attribute : None } }
         """
         return dict((char.ref[a], dict((char.ref[c], d) for c, d in b.items())) for a, b in data.items())
+
+    def filterData(s, data):
+        """
+        Filter out empty attributes and objects from Data
+        Strcuture { object : { attribute : True/False } }
+        """
+        return dict((e, f) for e, f in dict( (a, [c for c, d in b.items() if d] ) for a, b in data.items()).items() if f)
 
     def sendFiles(s, path=None):
         """
@@ -101,7 +108,7 @@ class Main(object):
         Prepare data. Replacing references with actual names.
         Sending = { object : attribute : True/False }
         """
-        return dict((char.ref[a], dict((char.ref[c], d) for c, d in b.items())) for a, b in char.data.items())
+        return s.flipData(char, char.data)
 
     def characterAddObjects(s, char):
         """
