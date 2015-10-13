@@ -61,7 +61,7 @@ class Main(object):
         else:
             raise RuntimeError, "File was not made with %s!" % s.software.title()
 
-    def characterEdit(s, char):
+    def characterEdit(s, char, refresh):
         """
         Open the character editing window.
         """
@@ -72,7 +72,8 @@ class Main(object):
             s.characterSendData,
             s.characterAddObjects,
             s.characterEditAttributes,
-            s.characterRemoveObject
+            s.characterRemoveObject,
+            refresh
             )
 
     def characterRetarget(s, char):
@@ -149,7 +150,7 @@ class Main(object):
 
     # CLIPS STUFF HERE !!
 
-    def clipEdit(s, char, clip=None):
+    def clipEdit(s, char, refresh, clip=None):
         """
         Load the clip edit window. If no existing clip is specified. Create a new one.
         """
@@ -162,7 +163,8 @@ class Main(object):
             clip,
             s.clipCaptureThumb,
             s.characterSendData,
-            s.clipCaptureData
+            s.clipCaptureData,
+            refresh
             )
 
     def clipCaptureThumb(s, camera):

@@ -6,7 +6,7 @@ import maya.cmds as cmds
 import warn
 
 class CharacterEdit(object):
-    def __init__(s, i18n, char, requestRetarget, requestObjects, sendNewObj, sendAttributeChange, sendObjDelete):
+    def __init__(s, i18n, char, requestRetarget, requestObjects, sendNewObj, sendAttributeChange, sendObjDelete, sendRefresh):
         s.i18n = i18n
         s.char = char
         s.requestObjects = requestObjects

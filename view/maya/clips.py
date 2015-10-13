@@ -26,7 +26,7 @@ class Clips(object):
             h=50,
             w=50,
             bgc=[0.3,0.3,0.3],
-            c=lambda: requestCharEdit(s.char)
+            c=lambda: requestCharEdit(s.char, s.refresh)
         )
         cmds.text(
             l="<h1>%s</h1>" % name,
@@ -38,7 +38,7 @@ class Clips(object):
         cmds.button(
             l=i18n["clips.newClip"],
             h=50,
-            c=lambda x: warn.run(requestClipEdit, s.char)
+            c=lambda x: warn.run(requestClipEdit, s.char, s.refresh)
             )
         cmds.setParent("..") # Close row
         cmds.floatSlider(
@@ -65,7 +65,7 @@ class Clips(object):
         if s.clips:
             for c in s.clips:
                 c.resize(val)
-    def refresh(s):
+    def refresh(s, *nothing):
         try:
             cmds.deleteUI(cmds.layout(s.wrapper, q=True, ca=True))
         except RuntimeError:
@@ -78,7 +78,8 @@ class Clips(object):
                     s.wrapper,
                     s.char,
                     c,
-                    s.sendRunClip
+                    s.sendRunClip,
+                    s.refresh
                     ))
                 s.clips[-1].resize(100)
 
@@ -86,7 +87,7 @@ class Clip(object):
     """
     Single clip
     """
-    def __init__(s, i18n, parent, char, clip, sendRunClip):
+    def __init__(s, i18n, parent, char, clip, sendRunClip, refresh):
         cmds.columnLayout(adj=True, bgc=[0.18,0.18,0.18], p=parent) # Main block
         s.i18n = i18n
         s.name = clip.metadata["name"].title()
@@ -108,7 +109,7 @@ class Clip(object):
         cmds.menuItem(d=True)
         cmds.menuItem(l=i18n["clips.renameClip"], c=lambda x: s.rename(char, clip))
         cmds.menuItem(ob=True, obi="pencilCursor.png")
-        cmds.menuItem(l=i18n["clips.deleteClip"], c=lambda x: warn.run(char.removeClip, clip))
+        cmds.menuItem(l=i18n["clips.deleteClip"], c=lambda x: refresh(warn.run(char.removeClip, clip)))
         cmds.menuItem(ob=True, obi="SP_TrashIcon.png")
     def resize(s, size):
         # img = s.imgSmall if size < 150 else s.imgLarge

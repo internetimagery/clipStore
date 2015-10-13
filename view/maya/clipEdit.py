@@ -13,13 +13,14 @@ class ClipEdit(object):
     """
     Create or edit an Animation
     """
-    def __init__(s, i18n, char, clip, requestThumb, requestCharData, requestClipCapture):
+    def __init__(s, i18n, char, clip, requestThumb, requestCharData, requestClipCapture, sendRefresh):
         s.i18n = i18n
         s.char = char
         s.clip = clip
         s.requestThumb = requestThumb # asking for new thumbnail
         s.requestClipCapture = requestClipCapture # Grab capture information
         s.data = requestCharData(char) # Get data for clip
+        s.sendRefresh = sendRefresh # Refresh the main interface when done
         s.winWidth = 500 # Window width
 
         # VALIDATE BEFORE DOING ANYTHING
@@ -140,3 +141,5 @@ class ClipEdit(object):
             # Remove temporary camera
             if cmds.objExists(s.camera):
                 cmds.delete(s.camera)
+            # Refresh the main interface!
+            s.sendRefresh()
