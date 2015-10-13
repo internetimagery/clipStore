@@ -9,8 +9,12 @@ En = {
         "clippose"      : "Create a single pose",
         "cliprange"     : "Insert framerange for clip",
         "thumbDesc"     : "Click to create a new thumbnail",
+        "missing"       : "Missing Objects...",
+        "missingDesc"   : "Some required objects are missing.\n[OBJECTS]\nAre you sure you want to create a clip?",
         "save"          : "SAVE CLIP",
-        "cancel"        : "DONT SAVE"
+        "cancel"        : "DONT SAVE",
+        "yes"           : "Yes",
+        "no"            : "No"
         },
     "characterEdit" : {
         "title"         : "Editing Character",

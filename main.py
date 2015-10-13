@@ -169,9 +169,11 @@ class Main(object):
         """
         Load up thumbnails
         """
+        thumbSmall = s.model.captureThumb(100, camera)
         thumbLarge = s.model.captureThumb(400, camera)
         return {
-            "thumbLarge" : thumbLarge
+            "small" : thumbSmall,
+            "large" : thumbLarge
             }
 
     def clipCaptureData(s, data, frames):

@@ -78,7 +78,7 @@ class SaveFile(object):
         s.tempdir = tempfile.mkdtemp()
         if os.path.isfile(s.path):
             try: # Load our savefile
-                with Timer("Reading file"):
+                with Timer("Opening file"):
                     store = zipfile.ZipFile(s.path, "r")
                     store.extractall(s.tempdir)
             except (zipfile.BadZipfile, IOError, OSError):
@@ -111,7 +111,7 @@ class SaveFile(object):
         Update the save file with the changes made
         """
         try:
-            with Timer("Saving file"):
+            with Timer("Closing file"):
                 z = zipfile.ZipFile("%s.incomplete" % s.path, "w")
                 for f in s.listFiles([s.tempdir]):
                     z.write(f, os.path.relpath(f, s.tempdir))

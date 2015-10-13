@@ -73,7 +73,7 @@ class Clip(object):
         # Save images
         for name, path in s.metadata["thumbs"].items():
             if os.path.isabs(path) and os.path.isfile(path): # Path has been changed to something new!
-                filename = name + os.path.splitext(path)[0] # Make a filename
+                filename = name + os.path.splitext(str(path))[1] # Make a filename
                 localPath = os.path.join(root, filename)
                 shutil.copyfile(path, localPath) # Copy image over
                 s.metadata["thumbs"][name] = "clips/%s/%s" % (s.ID, filename)
@@ -121,7 +121,7 @@ class Character(object):
                 if clips: # We have some existing clips to load
                     for ID in clips:
                         try:
-                            s.clips.append(Clip(s, ID, clipsFile))
+                            s.clips.append(Clip(ID, clipsFile))
                         except IOError:
                             print "Failed to load clip %s." % clip
     def save(s):

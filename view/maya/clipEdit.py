@@ -22,8 +22,20 @@ class ClipEdit(object):
         s.winWidth = 500 # Window width
 
         # VALIDATE BEFORE DOING ANYTHING
-        with warn:
-            s.validateObjs()
+        missing = [o for o in s.data if not cmds.objExists(o)]
+        if missing:
+            ans = cmds.confirmDialog(
+                t=s.i18n["missing"],
+                m=s.i18n["missingDesc"].replace("[OBJECTS]", "\n* ".join(missing)),
+                button=[s.i18n["yes"], s.i18n["no"]],
+                defaultButton=s.i18n["yes"],
+                cancelButton=s.i18n["no"],
+                dismissString=s.i18n["no"]
+                )
+            if ans == s.i18n["yes"]: # Are we ok to continue??
+                pass
+            else:
+                return
 
         s.camName = "TempCam_%s" % int(time.time())
         s.createCam()
@@ -84,10 +96,6 @@ class ClipEdit(object):
         )
         cmds.showWindow(s.window)
         cmds.scriptJob(uid=[s.window, s.save], ro=True)
-    def validateObjs(s):
-        for obj in s.data:
-            if not cmds.objExists(obj):
-                raise RuntimeError, "%s could not be found." % obj
 
     def createCam(s):
         if not cmds.objExists(s.camName):
@@ -117,7 +125,7 @@ class ClipEdit(object):
             # Grab name
             s.clip.metadata["name"] = s.name
             # Grab Thumbnails
-            s.clip.metadata = dict(s.clip.metadata, **s.requestThumb(s.camera))
+            s.clip.metadata["thumbs"] = s.requestThumb(s.camera)
             # Grab range information
             if s.pose:
                 frame = cmds.currentTime(q=True)
