@@ -164,4 +164,5 @@ class CharacterEdit(object):
             cc=lambda x: warn.run(s.refresh, s.sendAttributeChange(s.char, x, attr))
         )
     def save(s):
-        s.char.save()
+        with warn:
+            s.char.save()

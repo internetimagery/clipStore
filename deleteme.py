@@ -1,4 +1,3 @@
-from pprint import pprint
+import json
 
-for f in range(1.0, 2.0):
-    print f
+print json.dumps({"one":"two","three":"four"}, indent=4)

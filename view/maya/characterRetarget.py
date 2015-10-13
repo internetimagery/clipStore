@@ -154,4 +154,5 @@ class CharacterRetarget(object):
         raise RuntimeError, "You must select a single attribute."
 
     def save(s):
-        s.char.save()
+        with warn:
+            s.char.save()

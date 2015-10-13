@@ -51,8 +51,7 @@ class Clip(object):
             "createdBy"     : getpass.getuser(),
             "modifiedOn"    : time.time(),
             "modifiedBy"    : getpass.getuser(),
-            "thumbSmall"    : image.small, # Thumbnail for clip
-            "thumbLarge"    : image.large # Also a thumnail
+            "thumbs"        : {} # Thumbnails!
         }
         s.clipData = {} # { Obj , { Attribute, [ value, value ... ] } }
         if root: # We want to load this information. Otherwise creating new
@@ -65,31 +64,27 @@ class Clip(object):
             s.clipData = UpdateData(clipFile, s.clipData, lambda x, y: dict(x, **y))
         s.cleanup = [] # Temp files that might need to be cleaned?
 
-    def _save(s):
+    def _save(s, root):
         """
         Executed by the Character. Save the data to its own space
         """
         root = os.path.join(root, s.ID)
         if not os.path.isdir(root): os.mkdir(root)
         # Save images
-        for key, name in {
-            "thumbLarge" : "large",
-            "thumbSmall" : "small"
-            }.iteritems():
-            path = s.metadata[key]
-            if os.path.isabs(path):
-                fn = name + os.path.splitext(path)[1]
-                if os.path.isfile(path):
-                    shutil.copyfile(path, os.path.join(root, fn))
-                s.metadata[key] = "clips/%s/%s" % (s.ID, fn)
+        for name, path in s.metadata["thumbs"].items():
+            if os.path.isabs(path) and os.path.isfile(path): # Path has been changed to something new!
+                filename = name + os.path.splitext(path)[0] # Make a filename
+                localPath = os.path.join(root, filename)
+                shutil.copyfile(path, localPath) # Copy image over
+                s.metadata["thumbs"][name] = "clips/%s/%s" % (s.ID, filename)
         # Save metadata
         s.metadata["modifiedOn"] = time.time()
         s.metadata["modifiedBy"] = getpass.getuser()
         with open(os.path.join(root, "metadata.json"), "w") as f:
-            json.dump(s.metadata, f)
+            json.dump(s.metadata, f, indent=4)
         # Save clip data
         with open(os.path.join(root, "clip.json"), "w") as f:
-            json.dump(s.clipData, f)
+            json.dump(s.clipData, f, indent=4)
 
 class Character(object):
     """
@@ -139,15 +134,15 @@ class Character(object):
             s.metadata["modifiedBy"] = getpass.getuser()
             metaFile = os.path.join(sf, "metadata.json")
             with open(metaFile, "w") as f:
-                json.dump(s.metadata, f)
+                json.dump(s.metadata, f, indent=4)
             # Save Reference
             refFile = os.path.join(sf, "reference.json")
             with open(refFile, "w") as f:
-                json.dump(s.ref, f, cls=reference.ReferenceEncode)
+                json.dump(s.ref, f, cls=reference.ReferenceEncode, indent=4)
             # Save Data
             dataFile = os.path.join(sf, "data.json")
             with open(dataFile, "w") as f:
-                json.dump(s.data, f)
+                json.dump(s.data, f, indent=4)
             # Save Clips
             clipsFile = os.path.join(sf, "clips")
             if not os.path.isdir(clipsFile): os.mkdir(clipsFile)
