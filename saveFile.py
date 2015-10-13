@@ -25,51 +25,33 @@ class Timer(object):
             s.msecs = s.secs * 1000  # millisecs
             print '%s...\t\tElapsed time: %f ms' % (s.name, s.msecs)
 
-# class TempPath(object):
-#     """
-#     Temporary path that removes itself afterwards
-#     """
-#     def __init__(s, path):
-#         s.path = path
-#     def __del__(s):
-#         if os.path.isfile(s.path):
-#             os.remove(s.path)
+class Temp_Path(str):
+    def __del__(s):
+        if os.path.isfile(s):
+            print "Cleaning up", s
+            os.remove(s)
+    def __getattribute__(s, k):
+        raise AttributeError, "\"Temp_Path\" cannot be modified with \"%s\"" % k
 
 class SaveFile(object):
     def __init__(s, path):
         s.path = path # Where does this savefile live?
         if os.path.isdir(s.path): raise IOError, "Path provided is not a file."
 
-    def extract(s, files):
+    def extract(s, filename):
         """
-        Pull out files into temporary locations.
-        Returns { providedPath : TempFile(actualPath) }
+        Pull out file into temporary location.
+        Returns path to file.
         """
-        def copyFile(z, p):
-            tmp = tempfile.NamedTemporaryFile(suffix=os.path.splitext(p)[1])
-            tmp.write(z.read(p))
-            result[p] = tmp
         try:
             z = zipfile.ZipFile(s.path, "r")
             names = z.namelist()
-            threads = []
-            result = {}
-            for p in files:
-                if p in names:
-                    th = threading.Thread(
-                        target=copyFile,
-                        args=(z, p)
-                        )
-                    th.start()
-                    threads.append(th)
-                else:
-                    result[p] = None
-            if threads:
-                for th in threads:
-                    th.join()
-            return result
+            if filename in names:
+                with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(filename)[1]) as f:
+                    f.write(z.read(filename))
+                return Temp_Path(f.name)
         except (zipfile.BadZipfile, IOError, OSError):
-            pass
+            raise IOError, "%s not in Save file." % filename
 
     def __enter__(s):
         """

@@ -16,10 +16,10 @@ class Selector(object):
         s.winName = "PrimaryWin"
         if cmds.window(s.winName, ex=True):
             cmds.deleteUI(s.winName)
-        s.window = cmds.window(s.winName, rtf=True, t=s.i18n["title"])
+        s.window = cmds.window(s.winName, rtf=True, t=s.i18n["selector.title"])
         cmds.columnLayout(adj=True)
         cmds.iconTextButton(
-            l=i18n["open"],
+            l=i18n["selector.open"],
             style="iconAndTextHorizontal",
             font="boldLabelFont",
             image="SP_DirOpenIcon.png",
@@ -27,7 +27,7 @@ class Selector(object):
             c=lambda: s.addFiles(requestFiles())
         )
         cmds.iconTextButton(
-            l=i18n["new"],
+            l=i18n["selector.new"],
             style="iconAndTextHorizontal",
             font="boldLabelFont",
             image="Ghost_ON.png",
@@ -59,4 +59,4 @@ class Selector(object):
             for f in files:
                 addChar(f)
         else:
-            cmds.text(l=s.i18n["none"])
+            cmds.text(l=s.i18n["selector.none"])

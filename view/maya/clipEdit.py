@@ -1,4 +1,6 @@
 # Create a new/edit clip
+# Created 14/10/15 Jason Dixon
+# http://internetimagery.com
 
 from pprint import pprint
 import maya.cmds as cmds
@@ -18,15 +20,14 @@ class ClipEdit(object):
         s.requestThumb = requestThumb # asking for new thumbnail
         s.requestClipCapture = requestClipCapture # Grab capture information
         s.data = requestCharData(char) # Get data for clip
-        s.thumbs = {} # Captured thumbs
         s.winWidth = 500 # Window width
 
         # VALIDATE BEFORE DOING ANYTHING
         missing = [o for o in s.data if not cmds.objExists(o)]
         if missing:
             ans = cmds.confirmDialog(
-                t=s.i18n["missing"],
-                m=s.i18n["missingDesc"].replace("[OBJECTS]", "\n* ".join(missing)),
+                t=s.i18n["clipEdit.missing"],
+                m=s.i18n["clipEdit.missingDesc"].replace("[OBJECTS]", "\n* ".join(missing)),
                 button=[s.i18n["yes"], s.i18n["no"]],
                 defaultButton=s.i18n["yes"],
                 cancelButton=s.i18n["no"],
@@ -50,7 +51,7 @@ class ClipEdit(object):
         s.winName = "ClipNewWin"
         if cmds.window(s.winName, ex=True):
             cmds.deleteUI(s.winName)
-        s.window = cmds.window(s.winName, rtf=True, t=s.i18n["title"])
+        s.window = cmds.window(s.winName, rtf=True, t=s.i18n["clipEdit.title"])
         mainLayout = cmds.columnLayout()
         ## CAMERA CONTROLS
         s.camLayout = cmds.paneLayout(h=s.winWidth, w=s.winWidth, p=mainLayout)
@@ -74,19 +75,19 @@ class ClipEdit(object):
         ## DATA CONTROLS
         cmds.columnLayout(adj=True)
         s.clipname = cmds.textFieldGrp(
-            l=s.i18n["clipname"],
+            l=s.i18n["clipEdit.clipname"],
             text=s.name,
             h=30,
             tcc=s.nameChange
         )
         s.clippose = cmds.checkBoxGrp(
-            l=s.i18n["clippose"],
+            l=s.i18n["clipEdit.clippose"],
             h=30,
             v1=True,
             cc=s.poseChange
             )
         s.cliprange = cmds.intFieldGrp(
-            l=s.i18n["cliprange"],
+            l=s.i18n["clipEdit.cliprange"],
             nf=2,
             v1=s.range[0],
             v2=s.range[1],

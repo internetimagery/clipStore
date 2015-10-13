@@ -19,22 +19,22 @@ class CharacterRetarget(object):
 
         winName = "CharacterEditWin"
         if cmds.window(winName, ex=True): cmds.deleteUI(winName)
-        s.window = cmds.window(t="%s :: %s" % (s.i18n["title"], name), rtf=True)
+        s.window = cmds.window(t="%s :: %s" % (s.i18n["characterRetarget.title"], name), rtf=True)
         cmds.columnLayout(adj=True)
         # Title
         cmds.text(l="<h1>%s</h1>" % name)
         # Top button
         cmds.iconTextButton(
-            l=s.i18n["return"],
+            l=s.i18n["characterRetarget.return"],
             image="goToBindPose.png",
             style="iconAndTextHorizontal",
             c=lambda: warn.run(requestEdit, s.char)
         )
         cmds.separator()
         cmds.rowLayout(nc=3, adj=2)
-        cmds.text(l=i18n["from"], w=s.colWidth)
+        cmds.text(l=i18n["characterRetarget.from"], w=s.colWidth)
         cmds.text(l="  >  ", h=s.rowHeight)
-        cmds.text(l=i18n["to"], w=s.colWidth)
+        cmds.text(l=i18n["characterRetarget.to"], w=s.colWidth)
         cmds.setParent("..")
         cmds.scrollLayout(h=400, w=s.colWidth*2, bgc=[0.2,0.2,0.2])
         s.wrapper = cmds.columnLayout(adj=True)
@@ -79,7 +79,7 @@ class CharacterRetarget(object):
         row = cmds.rowLayout(nc=3, adj=2, cw2=[s.colWidth, s.colWidth], p=s.wrapper)
         # FROM COLUMN!
         cmds.text(
-            ann=s.i18n["fromDesc"],
+            ann=s.i18n["characterRetarget.fromDesc"],
             l=item,
             h=s.rowHeight,
             w=s.colWidth,
@@ -90,7 +90,7 @@ class CharacterRetarget(object):
             h=s.rowHeight,
             )
         btn = cmds.button(
-            ann=s.i18n["toDesc"],
+            ann=s.i18n["characterRetarget.toDesc"],
             l=item,
             h=s.rowHeight,
             c=lambda x: warn.run(func, item, btn),
@@ -109,8 +109,8 @@ class CharacterRetarget(object):
                 # If one attribute changes, replace the whole thing anyway?
                 # ASK TO CONFIRM FIRST!!
                 ans = cmds.confirmDialog(
-                    t=s.i18n["confirm"],
-                    m=s.i18n["targetConfirm"],
+                    t=s.i18n["characterRetarget.confirm"],
+                    m=s.i18n["characterRetarget.targetConfirm"],
                     button=[s.i18n["yes"], s.i18n["no"]],
                     defaultButton=s.i18n["yes"],
                     cancelButton=s.i18n["no"],
@@ -137,8 +137,8 @@ class CharacterRetarget(object):
                 if at not in s.allItems:
                     # ASK TO CONFIRM FIRST!!
                     ans = cmds.confirmDialog(
-                        t=s.i18n["confirm"],
-                        m=s.i18n["targetConfirm"],
+                        t=s.i18n["characterRetarget.confirm"],
+                        m=s.i18n["characterRetarget.targetConfirm"],
                         button=[s.i18n["yes"], s.i18n["no"]],
                         defaultButton=s.i18n["yes"],
                         cancelButton=s.i18n["no"],

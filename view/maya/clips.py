@@ -4,23 +4,23 @@ import maya.cmds as cmds
 import warn
 
 class Clips(object):
-    def __init__(s, i18n, char, requestCharEdit, requestClipEdit, sendClip, sendDelClip):
+    def __init__(s, i18n, char, requestCharEdit, requestClipEdit, sendRunClip, sendDelClip):
         s.i18n = i18n
         s.char = char
         s.requestClipEdit = requestClipEdit # We're asking to edit the clip
         s.sendDelClip = sendDelClip
-        s.sendClip = sendClip # User wants to place the clip
+        s.sendRunClip = sendRunClip # User wants to place the clip
         s.clips = [] # Init clips!
         name = s.char.metadata["name"].title()
 
         s.winName = "%sWin" % name
         if cmds.window(s.winName, ex=True):
             cmds.deleteUI(s.winName)
-        s.window = cmds.window(s.winName, rtf=True, t="%s %s" % (name, i18n["title"]))
+        s.window = cmds.window(s.winName, rtf=True, t="%s %s" % (name, i18n["clips.title"]))
         cmds.columnLayout(adj=True)
         cmds.rowLayout(nc=2, adj=2) # Open Row
         cmds.iconTextButton(
-            ann=i18n["editChar"],
+            ann=i18n["clips.editChar"],
             style="iconOnly",
             font="boldLabelFont",
             image="goToBindPose.png",
@@ -37,7 +37,7 @@ class Clips(object):
         cmds.setParent("..") # Close row
         cmds.columnLayout(adj=True) # Open Col
         cmds.button(
-            l=i18n["newClip"],
+            l=i18n["clips.newClip"],
             h=50,
             c=lambda x: warn.run(requestClipEdit, s.char)
             )
@@ -50,7 +50,7 @@ class Clips(object):
             h=20
             )
         cmds.separator()
-        cmds.frameLayout(l=i18n["moreInfo"], font="tinyBoldLabelFont")
+        cmds.frameLayout(l=i18n["clips.moreInfo"], font="tinyBoldLabelFont")
         cmds.scrollLayout(cr=True, mcw=400, bgc=[0.2,0.2,0.2], h=400)
         s.wrapper = cmds.gridLayout(cwh=[100, 120], cr=True)
         cmds.setParent("..") # Close grid
@@ -71,47 +71,51 @@ class Clips(object):
             cmds.deleteUI(cmds.layout(s.wrapper, q=True, ca=True))
         except RuntimeError:
             pass
-        s.clips = []
-        for c in range(20): # TODO, get these from the character
-            s.clips.append(Clip(
-                s.i18n,
-                s.wrapper,
-                c,
-                s.sendClip,
-                s.requestClipEdit,
-                s.sendDelClip,
-                "ghostOff.png",
-                "time.svg"
-                ))
-            s.clips[-1].resize(100)
+        s.clips = [] # GUI clips
+        if s.char.clips:
+            for c in s.char.clips:
+                s.clips.append(Clip(
+                    s.i18n,
+                    s.wrapper,
+                    s.char,
+                    c,
+                    s.sendRunClip,
+                    s.requestClipEdit,
+                    s.sendDelClip,
+                    ))
+                s.clips[-1].resize(100)
 
 class Clip(object):
     """
     Single clip
     """
-    def __init__(s, i18n, parent, clip, sendClip, requestClipEdit, sendDelClip, imgSmall, imgLarge):
-        cmds.columnLayout(adj=True, bgc=[0.18,0.18,0.18], p=parent)
-        s.imgSmall = imgSmall
-        s.imgLarge = imgLarge
+    def __init__(s, i18n, parent, char, clip, sendRunClip, requestClipEdit, sendDelClip):
+        cmds.columnLayout(adj=True, bgc=[0.18,0.18,0.18], p=parent) # Main block
+        s.name = clip.metadata["name"].title()
+        # s.imgSmall = char.cache(clip.metadata["thumbs"]["small"]) if clip.metadata["thumbs"].get("small", False) else "ghostOff.png"
+        s.imgLarge = char.cache(clip.metadata["thumbs"]["large"]) if clip.metadata["thumbs"].get("large", False) else "ghostOff.png"
         s.img = cmds.iconTextButton(
             l="",
-            ann=i18n["addClip"],
+            ann=i18n["clips.addClip"],
             style="iconOnly",#"iconAndTextVertical",
-            image=s.imgSmall,
-            c=lambda: warn.run(sendClip, clip)
+            image=s.imgLarge,
+            c=lambda: warn.run(sendRunClip, clip)
             )
-        cmds.text(l="CLIPNAME", h=20)
+        cmds.text(l=s.name, h=20)
         cmds.popupMenu(p=s.img)
-        cmds.menuItem(l="CLIPNAME", en=False, itl=True)
-        cmds.menuItem(l=i18n["ignoreSel"])
+        cmds.menuItem(l=s.name, en=False, itl=True)
+        cmds.menuItem(l=i18n["clips.ignoreSel"])
         cmds.menuItem(ob=True, obi="channelBoxMedium.png")
-        cmds.menuItem(l=i18n["includeSel"])
+        cmds.menuItem(l=i18n["clips.includeSel"])
         cmds.menuItem(ob=True, obi="channelBoxSlow.png")
         cmds.menuItem(d=True)
-        cmds.menuItem(l=i18n["editClip"], c=lambda x: requestClipEdit(clip))
+        cmds.menuItem(l=i18n["clips.renameClip"], c=lambda x: rename(clip))
         cmds.menuItem(ob=True, obi="pencilCursor.png")
-        cmds.menuItem(l=i18n["deleteClip"], c=lambda x: sendDelClip(clip))
+        cmds.menuItem(l=i18n["clips.deleteClip"], c=lambda x: sendDelClip(char, clip))
         cmds.menuItem(ob=True, obi="SP_TrashIcon.png")
     def resize(s, size):
-        img = s.imgSmall if size < 150 else s.imgLarge
-        cmds.iconTextButton(s.img, e=True, w=size, h=size, i=img)
+        # img = s.imgSmall if size < 150 else s.imgLarge
+        # cmds.iconTextButton(s.img, e=True, w=size, h=size, i=img)
+        cmds.iconTextButton(s.img, e=True, w=size, h=size)
+    def rename(s, clip):
+        print "rename"

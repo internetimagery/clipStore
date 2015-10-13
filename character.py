@@ -155,9 +155,9 @@ class Character(object):
         c = Clip(uuid.uuid4().hex) # Create a new clip
         s.clips.append(c)
         return c
-    def cache(s, files):
+    def cache(s, path):
         """
         Wrapper for savefile extract
-        Pull out requested files into temporary files.
+        Pull out requested file into temporary file to work with.
         """
-        return s.saveFile.extract(files)
+        return s.saveFile.extract(path)

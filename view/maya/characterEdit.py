@@ -20,20 +20,20 @@ class CharacterEdit(object):
 
         winName = "CharacterEditWin"
         if cmds.window(winName, ex=True): cmds.deleteUI(winName)
-        s.window = cmds.window(t="%s :: %s" % (s.i18n["title"], name), rtf=True)
+        s.window = cmds.window(t="%s :: %s" % (s.i18n["characterEdit.title"], name), rtf=True)
         cmds.columnLayout(adj=True)
         # Title
         cmds.text(l="<h1>%s</h1>" % name)
         # Top button
         cmds.rowLayout(nc=2)
         cmds.iconTextButton(
-            l=s.i18n["addBtn"],
+            l=s.i18n["characterEdit.addBtn"],
             image="selectByObject.png",
             style="iconAndTextHorizontal",
             c=lambda: s.refresh(warn.run(s.sendSelection))
         )
         cmds.iconTextButton(
-            l=s.i18n["retargetBtn"],
+            l=s.i18n["characterEdit.retargetBtn"],
             image="geometryToBoundingBox.png",
             style="iconAndTextHorizontal",
             c=lambda: (warn.run(requestRetarget, s.char), cmds.deleteUI(s.window))
@@ -43,11 +43,11 @@ class CharacterEdit(object):
         row = cmds.rowLayout(nc=3, adj=2)
         # Begin Filters
         cmds.columnLayout(adj=True)
-        cmds.text(l=i18n["filter"])
+        cmds.text(l=i18n["characterEdit.filter"])
         s.filterWrapper = cmds.scrollLayout(h=400, cr=True, bgc=[0.2,0.2,0.2])
         # Begin Objects
         cmds.columnLayout(w=400, p=row)
-        cmds.text(l=i18n["attrs"])
+        cmds.text(l=i18n["characterEdit.attrs"])
         s.objWrapper = cmds.scrollLayout(h=400, w=400, cr=True, bgc=[0.2,0.2,0.2])
         cmds.showWindow(s.window)
         cmds.scriptJob(uid=[s.window, s.save], ro=True)
@@ -87,8 +87,8 @@ class CharacterEdit(object):
         Ask for permission to delete object. Big deal!!
         """
         ans = cmds.confirmDialog(
-            t=s.i18n["confirm"],
-            m=s.i18n["delConfirm"],
+            t=s.i18n["characterEdit.confirm"],
+            m=s.i18n["characterEdit.delConfirm"],
             button=[s.i18n["yes"], s.i18n["no"]],
             defaultButton=s.i18n["yes"],
             cancelButton=s.i18n["no"],
@@ -146,7 +146,7 @@ class CharacterEdit(object):
             )
         # DELETE BUTTON
         cmds.iconTextButton(
-            ann=s.i18n["delDesc"],
+            ann=s.i18n["characterEdit.delDesc"],
             image="removeRenderable.png",
             style="iconOnly",
             h=20,
