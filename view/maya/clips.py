@@ -4,11 +4,10 @@ import maya.cmds as cmds
 import warn
 
 class Clips(object):
-    def __init__(s, i18n, char, requestCharEdit, requestClipEdit, sendRunClip, sendDelClip):
+    def __init__(s, i18n, char, requestCharEdit, requestClipEdit, sendRunClip):
         s.i18n = i18n
         s.char = char
         s.requestClipEdit = requestClipEdit # We're asking to edit the clip
-        s.sendDelClip = sendDelClip
         s.sendRunClip = sendRunClip # User wants to place the clip
         s.clips = [] # Init clips!
         name = s.char.metadata["name"].title()
@@ -79,9 +78,7 @@ class Clips(object):
                     s.wrapper,
                     s.char,
                     c,
-                    s.sendRunClip,
-                    s.requestClipEdit,
-                    s.sendDelClip,
+                    s.sendRunClip
                     ))
                 s.clips[-1].resize(100)
 
@@ -89,19 +86,19 @@ class Clip(object):
     """
     Single clip
     """
-    def __init__(s, i18n, parent, char, clip, sendRunClip, requestClipEdit, sendDelClip):
+    def __init__(s, i18n, parent, char, clip, sendRunClip):
         cmds.columnLayout(adj=True, bgc=[0.18,0.18,0.18], p=parent) # Main block
+        s.i18n = i18n
         s.name = clip.metadata["name"].title()
         # s.imgSmall = char.cache(clip.metadata["thumbs"]["small"]) if clip.metadata["thumbs"].get("small", False) else "ghostOff.png"
         s.imgLarge = char.cache(clip.metadata["thumbs"]["large"]) if clip.metadata["thumbs"].get("large", False) else "ghostOff.png"
         s.img = cmds.iconTextButton(
-            l="",
             ann=i18n["clips.addClip"],
             style="iconOnly",#"iconAndTextVertical",
             image=s.imgLarge,
             c=lambda: warn.run(sendRunClip, clip)
             )
-        cmds.text(l=s.name, h=20)
+        s.label = cmds.text(l=s.name, h=20)
         cmds.popupMenu(p=s.img)
         cmds.menuItem(l=s.name, en=False, itl=True)
         cmds.menuItem(l=i18n["clips.ignoreSel"])
@@ -109,13 +106,26 @@ class Clip(object):
         cmds.menuItem(l=i18n["clips.includeSel"])
         cmds.menuItem(ob=True, obi="channelBoxSlow.png")
         cmds.menuItem(d=True)
-        cmds.menuItem(l=i18n["clips.renameClip"], c=lambda x: rename(clip))
+        cmds.menuItem(l=i18n["clips.renameClip"], c=lambda x: s.rename(char, clip))
         cmds.menuItem(ob=True, obi="pencilCursor.png")
-        cmds.menuItem(l=i18n["clips.deleteClip"], c=lambda x: sendDelClip(char, clip))
+        cmds.menuItem(l=i18n["clips.deleteClip"], c=lambda x: warn.run(char.removeClip, clip))
         cmds.menuItem(ob=True, obi="SP_TrashIcon.png")
     def resize(s, size):
         # img = s.imgSmall if size < 150 else s.imgLarge
         # cmds.iconTextButton(s.img, e=True, w=size, h=size, i=img)
         cmds.iconTextButton(s.img, e=True, w=size, h=size)
-    def rename(s, clip):
-        print "rename"
+    def rename(s, char, clip):
+        result = cmds.promptDialog(
+    		title=s.i18n["clips.renameClip"],
+    		message=s.i18n["clips.enterName"],
+    		button=[s.i18n["ok"], s.i18n["cancel"]],
+    		defaultButton=s.i18n["ok"],
+    		cancelButton=s.i18n["cancel"],
+    		dismissString=s.i18n["cancel"])
+        text = cmds.promptDialog(query=True, text=True)
+        if result == s.i18n["ok"] and text:
+            text = text.strip().title() if text else None
+            if text:
+                clip.metadata["name"] = text
+                char.save()
+                cmds.text(s.label, e=True, l=text)

@@ -155,6 +155,20 @@ class Character(object):
         c = Clip(uuid.uuid4().hex) # Create a new clip
         s.clips.append(c)
         return c
+    def removeClip(s, clip):
+        """
+        Remove clip
+        """
+        if clip in s.clips:
+            ID = clip.ID
+            with s.saveFile as sf:
+                path = os.path.join(sf, "clips", ID)
+                if os.path.isdir(path):
+                    print "Removing Clip..."
+                    shutil.rmtree(path)
+                    s.clips.remove(clip)
+        else:
+            raise RuntimeError, "Clip not found..."
     def cache(s, path):
         """
         Wrapper for savefile extract

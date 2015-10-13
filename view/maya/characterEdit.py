@@ -30,7 +30,7 @@ class CharacterEdit(object):
             l=s.i18n["characterEdit.addBtn"],
             image="selectByObject.png",
             style="iconAndTextHorizontal",
-            c=lambda: s.refresh(warn.run(s.sendSelection))
+            c=lambda: s.refresh(warn.run(s.sendNewObj, s.char))
         )
         cmds.iconTextButton(
             l=s.i18n["characterEdit.retargetBtn"],
@@ -96,18 +96,6 @@ class CharacterEdit(object):
             )
         if ans == s.i18n["yes"]: # Are we ok to delete??
             s.sendObjDelete(s.char, obj)
-
-    def sendSelection(s):
-        """
-        Send new objects from selected objects
-        """
-        selection = cmds.ls(sl=True, type="transform")
-        if selection:
-            store = {}
-            for sel in selection:
-                store[sel] = cmds.listAttr(sel, k=True)
-            s.sendNewObj(s.char, store)
-        else: raise RuntimeError, "Nothing selected."
 
     def addAttr(s, val, attr, obj, parent):
         def boxChange(attr, val):

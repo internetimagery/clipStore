@@ -5,23 +5,13 @@
 import maya.cmds as cmds
 
 class Selection(object):
-    def allAttributes(s, objects=None):
+    def current(s):
         """
-        Provide all attributes from given selected objects
+        Get current selection
         """
-        objects = cmds.ls(objects, type="transform") if objects else cmds.ls(sl=True, type="transform")
-        if objects:
-            return list(set(cmds.listAttr(objects, keyable=True)))
-        else:
-            raise RuntimeError, "No usable objects."
-    def getSelection(s, objects=None):
-        """
-        Get selection, objects and attributes
-        """
-        sel = cmds.ls(sl=True, type="transform")
-        if sel:
-            store = {}
-            for s in sel:
-                store[s] = cmds.listAttr(s, k=True)
-            return store
-        else: raise RuntimeError, "Nothing selected."
+        objects = cmds.ls(sl=True)
+        channels = cmds.channelBox('mainChannelBox', sma=True, q=True)
+        channels = [cmds.attributeQuery(at, n=objects[-1], ln=True) for at in channels] if objects and channels else []
+        return dict( (a, [b for b in cmds.listAttr(a, k=True) if not channels or b in channels and cmds.attributeQuery(b, n=a, ex=True)]) for a in cmds.ls(sl=True, type="transform") )
+
+Selection = Selection()

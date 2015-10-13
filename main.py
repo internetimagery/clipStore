@@ -55,8 +55,7 @@ class Main(object):
                 char,
                 s.characterEdit,
                 s.clipEdit,
-                s.clipPose,
-                s.clipDel
+                s.clipPose
                 )
             return char
         else:
@@ -95,16 +94,17 @@ class Main(object):
         """
         return dict((char.ref[a], dict((char.ref[c], d) for c, d in b.items())) for a, b in char.data.items())
 
-    def characterAddObjects(s, char, objects):
+    def characterAddObjects(s, char):
         """
-        Add some new objects / attributes to the character
+        Add some new objects / attributes to the character from selection
         Accepts = { object : [attribute1, attribute2, ... ] }
         """
-        if objects:
+        selection = s.model.selection.current() # Grab current selection.
+        if selection:
             # Grab all inactive attributes so we can skip them in the adding process
             exclusions = set([c for a, b in char.data.items() for c, d in b.items() if not d])
             # Create new entry
-            new = dict((char.ref[a], dict((char.ref[c], False if char.ref[c] in exclusions else True) for c in b)) for a, b in objects.items() if a not in char.data)
+            new = dict((char.ref[a], dict((char.ref[c], False if char.ref[c] in exclusions else True) for c in b)) for a, b in selection.items() if a not in char.data)
             # Add entry to existing data
             char.data = dict(char.data, **new)
         else: raise RuntimeError, "Nothing selected."
@@ -169,10 +169,10 @@ class Main(object):
         """
         Load up thumbnails
         """
-        thumbSmall = s.model.captureThumb(100, camera)
+        # thumbSmall = s.model.captureThumb(100, camera)
         thumbLarge = s.model.captureThumb(400, camera)
         return {
-            "small" : thumbSmall,
+            # "small" : thumbSmall,
             "large" : thumbLarge
             }
 
@@ -194,8 +194,7 @@ class Main(object):
 
     def clipPose(s, clip):
         print "pose out clip"
-    def clipDel(s, clip):
-        print "delete clip!"
+
 
 ### TESTING
 # import animCopy.view.maya as view

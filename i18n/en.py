@@ -1,6 +1,7 @@
 # English Language!
 
 En = {
+    "ok"                                : "Ok",
     "yes"                               : "Yes",
     "no"                                : "No",
     "cancel"                            : "Cancel",
@@ -42,6 +43,7 @@ En = {
     "clips.newClip"                     : "Capture a new Clip!",
     "clips.addClip"                     : "Click to apply the Clip to the Character.\nRight click for more options...",
     "clips.renameClip"                  : "Rename this clip.",
+    "clips.enterName"                   : "Enter a new name.",
     "clips.deleteClip"                  : "Delete the clip.",
     "clips.ignoreSel"                   : "Apply the clip, ignoring anything selected.",
     "clips.includeSel"                  : "Apply the clip only to things selected.",
