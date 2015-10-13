@@ -127,7 +127,7 @@ class ClipEdit(object):
             # Grab name
             s.clip.metadata["name"] = s.name
             # Grab Thumbnails
-            s.clip.metadata["thumbs"] = s.requestThumb(s.camera)
+            s.requestThumb(s.char, s.clip, s.camera)
             # Grab range information
             if s.pose:
                 frame = cmds.currentTime(q=True)
@@ -135,7 +135,7 @@ class ClipEdit(object):
             else:
                 frameRange = s.range
             # # Grab Clip
-            s.clip.clip = s.requestClipCapture(s.data, frameRange)
+            s.requestClipCapture(s.char, s.clip, frameRange)
             # Save information
             s.char.save()
             # Remove temporary camera

@@ -20,6 +20,14 @@ class Main(object):
             s.characterNew,
             s.characterLoad
             )
+
+    def flipData(s, data):
+        """
+        Given a structure of data. Flip the ID's and Real names.
+        Structure { object : { attribute : None } }
+        """
+        return dict((char.ref[a], dict((char.ref[c], d) for c, d in b.items())) for a, b in data.items())
+
     def sendFiles(s, path=None):
         """
         Given user input path, list character files
@@ -167,29 +175,31 @@ class Main(object):
             refresh
             )
 
-    def clipCaptureThumb(s, camera):
+    def clipCaptureThumb(s, char, clip, camera):
         """
         Load up thumbnails
         """
         # thumbSmall = s.model.captureThumb(100, camera)
         thumbLarge = s.model.captureThumb(400, camera)
-        return {
+        clip.metadata["thumbs"] = {
             # "small" : thumbSmall,
             "large" : thumbLarge
             }
 
-    def clipCaptureData(s, data, frames):
+    def clipCaptureData(s, char, clip, frames):
         """
         Capture Data
         Accepts =
             data = { objects : { attribtes : True/False } }
             frames = [ frameStart, frameEnd ]
-        Return = { object : { attribute : [val1, val2, val3, ... ]} }
+        Insert into clip = { object : { attribute : [val1, val2, val3, ... ]} }
         """
         if len(frames) == 2:
             # Trim out "false" attributes, create { object : [ attribute1, attribute2, ... ] }
-            filteredData = dict( (a, [c for c, d in b.items() if d] ) for a, b in data.items())
-            return s.model.captureClip(filteredData, frames)
+            filteredData = dict( (a, [c for c, d in b.items() if d] ) for a, b in s.characterSendData(char).items())
+            data = s.model.captureClip(filteredData, frames)
+            # Revert the data back into ID's
+            clip.clip = dict((char.ref[a], dict((char.ref[c], d) for c, d in b.items())) for a, b in data.items())
         else:
             raise RuntimeError, "Invalid range given."
 
