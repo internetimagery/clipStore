@@ -15,7 +15,7 @@ class Main(object):
 
         # Load our Selector window
         view.selector(
-            s.i18n],
+            s.i18n,
             s.sendFiles,
             s.characterNew,
             s.characterLoad
@@ -25,7 +25,7 @@ class Main(object):
         Given user input path, list character files
         """
         if not path:
-            path = s.view.fileDialog(s.i18n]).openDir()
+            path = s.view.fileDialog(s.i18n).openDir()
         if path:
             path = os.path.realpath(path)
             return [os.path.join(path, f) for f in os.listdir(path) if s.ext in f]
@@ -36,7 +36,7 @@ class Main(object):
         """
         Create a new character!
         """
-        path = s.view.fileDialog(s.i18n]).save()
+        path = s.view.fileDialog(s.i18n).save()
         if path:
             if os.path.isfile(path): os.remove(path)
             char = s.characterLoad(path)
@@ -51,7 +51,7 @@ class Main(object):
         char = character.Character(path, s.software)
         if char.metadata["software"] == s.software:
             s.view.clips(
-                s.i18n],
+                s.i18n,
                 char,
                 s.characterEdit,
                 s.clipEdit,
@@ -67,7 +67,7 @@ class Main(object):
         Open the character editing window.
         """
         s.view.characterEdit(
-            s.i18n],
+            s.i18n,
             char,
             s.characterRetarget,
             s.characterSendData,
@@ -81,7 +81,7 @@ class Main(object):
         Open the character retarget window.
         """
         s.view.characterRetarget(
-            s.i18n],
+            s.i18n,
             char,
             s.characterEdit,
             s.characterSendData,
@@ -157,7 +157,7 @@ class Main(object):
             clip = char.createClip()
 
         s.view.clipEdit(
-            s.i18n],
+            s.i18n,
             char,
             clip,
             s.clipCaptureThumb,
