@@ -1,4 +1,5 @@
 # Lets run this thing!!
+from pprint import pprint
 import character
 import os.path
 import os
@@ -173,16 +174,20 @@ class Main(object):
             "thumbLarge" : thumbLarge
             }
 
-    def clipCaptureData(s, char, frames):
+    def clipCaptureData(s, data, frames):
         """
         Capture Data
+        Accepts =
+            data = { objects : { attribtes : True/False } }
+            frames = [ frameStart, frameEnd ]
+        Return = { object : { attribute : [val1, val2, val3, ... ]} }
         """
-        # Get data
-        charData = s.characterSendData(char)
-        charData = dict((a, [c for c, d in b.items() if d]) for a, b in charData)
-        print "HERE", charData
-        # data = s.model.captureClip(char, frames)
-        # print data
+        if len(frames) == 2:
+            # Trim out "false" attributes, create { object : [ attribute1, attribute2, ... ] }
+            filteredData = dict( (a, [c for c, d in b.items() if d] ) for a, b in data.items())
+            return s.model.captureClip(filteredData, frames)
+        else:
+            raise RuntimeError, "Invalid range given."
 
 
     def clipPose(s, clip):

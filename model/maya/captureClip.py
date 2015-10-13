@@ -1,24 +1,26 @@
 # Capture a pose or animation given a character
+# Created 13/10/15 Jason Dixon
+# http://internetimagery.com
 
 import maya.cmds as cmds
+from collections import defaultdict as dd
 
-def CaptureAnim(character, frames):
+def CaptureClip(data, frames):
     """
     Capture a characters current pose or animation information
+    Accepts =
+        data = { object : [ attribute ] }
+        frames = [frameStart, frameEnd]
     """
-    structure = {}
-    # Validate information
-    if frames and len(frames) == 2:
-        frames = sorted(frames)
-        for frame in range(frames[0], frames[1] + 1):
-            cmds.currentTime(frame) # Move to frame
-            for obj in character:
-                if structure.has_key(obj) or cmds.objExists(obj):
-                    structure[obj] = structure.get(obj, {})
-                    for at in character[obj]:
-                        if structure[obj].has_key(at) or cmds.attributeQuery(at, n=obj, ex=True):
-                            structure[obj][at] = structure[obj].get(at, [])
-                            structure[obj][at].append(cmds.getAttr("%s.%s" % (obj, at)))
-    else:
-        raise RuntimeError, "Frame range not valid."
-    return structure
+    newData = dd(lambda:dd(list))
+    frames = sorted(frames)
+    oldFrame = cmds.currentTime(q=True) # Mark where we were
+    for frame in range(int(frames[0]), int(frames[1] + 1)):
+        cmds.currentTime(frame) # Move to frame
+        for obj, attrs in data.items():
+            if attrs and obj in newData or cmds.objExists(obj):
+                for attr in attrs:
+                    if attr in newData[obj] or cmds.attributeQuery(attr, n=obj, ex=True):
+                        newData[obj][attr].append(cmds.getAttr("%s.%s" % (obj, attr)))
+    cmds.currentTime(oldFrame) # Put us back where we started
+    return newData

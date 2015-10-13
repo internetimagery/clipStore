@@ -1,5 +1,6 @@
 # Create a new/edit clip
 
+from pprint import pprint
 import maya.cmds as cmds
 import os.path
 import time
@@ -15,8 +16,8 @@ class ClipEdit(object):
         s.char = char
         s.clip = clip
         s.requestThumb = requestThumb # asking for new thumbnail
-        s.requestCharData = requestCharData # Grab the character data
         s.requestClipCapture = requestClipCapture # Grab capture information
+        s.data = requestCharData(char) # Get data for clip
         s.thumbs = {} # Captured thumbs
         s.winWidth = 500 # Window width
 
@@ -84,7 +85,7 @@ class ClipEdit(object):
         cmds.showWindow(s.window)
         cmds.scriptJob(uid=[s.window, s.save], ro=True)
     def validateObjs(s):
-        for obj in s.requestCharData(s.char):
+        for obj in s.data:
             if not cmds.objExists(obj):
                 raise RuntimeError, "%s could not be found." % obj
 
@@ -106,28 +107,29 @@ class ClipEdit(object):
         cmds.intFieldGrp(s.cliprange, e=True, en=False if val else True)
         s.pose = val
 
-    def rangeChange(s):
-        min_ = cmds.intFieldGrp(s.cliprange, q=True, v1=True)
-        max_ = cmds.intFieldGrp(s.cliprange, q=True, v2=True)
+    def rangeChange(s, min_, max_):
+        # min_ = cmds.intFieldGrp(s.cliprange, q=True, v1=True)
+        # max_ = cmds.intFieldGrp(s.cliprange, q=True, v2=True)
         s.range = sorted([min_, max_])
 
     def save(s):
-        # Grab name
-        s.clip.metadata["name"] = s.name
-        # Grab Thumbnails
-        s.clip.metadata = dict(s.clip.metadata, **s.requestThumb(s.camera))
-        # Grab range information
-        if s.pose:
-            frame = cmds.currentTime(q=True)
-            frameRange = [frame, frame]
-        else:
-            frameRange = s.range
-        # # Grab Clip
-        print "Storing Clip Data."
-        # print s.requestClipCapture(s.char, frameRange)
-        # s.clip.clipData = s.requestClipCapture(s.char, frameRange)
-        # Save information
-        # s.char.save()
-        # Remove temporary camera
-        if cmds.objExists(s.camera):
-            cmds.delete(s.camera)
+        with warn:
+            # Grab name
+            s.clip.metadata["name"] = s.name
+            # Grab Thumbnails
+            s.clip.metadata = dict(s.clip.metadata, **s.requestThumb(s.camera))
+            # Grab range information
+            if s.pose:
+                frame = cmds.currentTime(q=True)
+                frameRange = [frame, frame]
+            else:
+                frameRange = s.range
+            # # Grab Clip
+            print "Storing Clip Data."
+            data = s.requestClipCapture(s.data, frameRange)
+            # s.clip.clipData = s.requestClipCapture(s.char, frameRange)
+            # Save information
+            # s.char.save()
+            # Remove temporary camera
+            if cmds.objExists(s.camera):
+                cmds.delete(s.camera)

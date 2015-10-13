@@ -11,7 +11,7 @@ class Temp_Path(str):
     def __del__(s):
         if os.path.isfile(s):
             os.remove(s)
-            print "Removed", s
+            print "Cleaned tempfile:", s
     def __getattribute__(s, k):
         raise AttributeError, "\"Temp_Path\" cannot be modified with \"%s\"" % k
 
@@ -32,9 +32,7 @@ def CaptureThumb(pixels, camera):
     imgFormat = cmds.getAttr("defaultRenderGlobals.imageFormat")
     selection = cmds.ls(sl=True)
     # Create a temporary file to hold the thumbnail
-    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
-    tmp.close()
-    path = Temp_Path(tmp.name)
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as f: path = Temp_Path(f.name)
     # Capture our thumbnail
     try:
         cmds.modelEditor(view, e=True, camera=camera) # Change to camera
@@ -49,7 +47,7 @@ def CaptureThumb(pixels, camera):
             height=pixels*2, # Height in pixels. Who knew
             showOrnaments=False, # Hide tools, ie move tool etc
             format="image", # We just want a single image
-            completeFilename=tmp.name.replace("\\", "/") # Output file
+            completeFilename=f.name.replace("\\", "/") # Output file
             )
     # Put everything back as we found it.
     finally:
