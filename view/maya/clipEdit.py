@@ -125,7 +125,7 @@ class ClipEdit(object):
             else:
                 frameRange = s.range
             # # Grab Clip
-            s.clip.clipData = s.requestClipCapture(s.data, frameRange)
+            s.clip.clip = s.requestClipCapture(s.data, frameRange)
             # Save information
             s.char.save()
             # Remove temporary camera

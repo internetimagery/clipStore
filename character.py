@@ -53,7 +53,7 @@ class Clip(object):
             "modifiedBy"    : getpass.getuser(),
             "thumbs"        : {} # Thumbnails!
         }
-        s.clipData = {} # { Obj , { Attribute, [ value, value ... ] } }
+        s.clip = {} # { Obj , { Attribute, [ value, value ... ] } }
         if root: # We want to load this information. Otherwise creating new
             root = os.path.join(root, ID)
             # Load Metadata
@@ -61,7 +61,7 @@ class Clip(object):
             s.metadata = UpdateData(metaFile, s.metadata, lambda x, y: dict(x, **y))
             # Load Clip Data
             clipFile = os.path.join(root, "clip.json")
-            s.clipData = UpdateData(clipFile, s.clipData, lambda x, y: dict(x, **y))
+            s.clip = UpdateData(clipFile, s.clip, lambda x, y: dict(x, **y))
         s.cleanup = [] # Temp files that might need to be cleaned?
 
     def _save(s, root):
@@ -84,7 +84,7 @@ class Clip(object):
             json.dump(s.metadata, f, indent=4)
         # Save clip data
         with open(os.path.join(root, "clip.json"), "w") as f:
-            json.dump(s.clipData, f, indent=4)
+            json.dump(s.clip, f, indent=4)
 
 class Character(object):
     """
