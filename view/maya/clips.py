@@ -96,14 +96,14 @@ class Clip(object):
             ann=i18n["clips.addClip"],
             style="iconOnly",#"iconAndTextVertical",
             image=s.imgLarge,
-            c=lambda: warn.run(sendRunClip, clip)
+            c=lambda: warn.run(sendRunClip, char, clip)
             )
         s.label = cmds.text(l=s.name, h=20)
         cmds.popupMenu(p=s.img)
         cmds.menuItem(l=s.name, en=False, itl=True)
-        cmds.menuItem(l=i18n["clips.ignoreSel"])
+        cmds.menuItem(l=i18n["clips.ignoreSel"], c=lambda x: warn.run(sendRunClip, char, clip, ignore=True))
         cmds.menuItem(ob=True, obi="channelBoxMedium.png")
-        cmds.menuItem(l=i18n["clips.includeSel"])
+        cmds.menuItem(l=i18n["clips.includeSel"], c=lambda x: warn.run(sendRunClip, char, clip, include=True))
         cmds.menuItem(ob=True, obi="channelBoxSlow.png")
         cmds.menuItem(d=True)
         cmds.menuItem(l=i18n["clips.renameClip"], c=lambda x: s.rename(char, clip))

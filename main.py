@@ -55,7 +55,7 @@ class Main(object):
                 char,
                 s.characterEdit,
                 s.clipEdit,
-                s.clipPose
+                s.clipRun
                 )
             return char
         else:
@@ -191,9 +191,22 @@ class Main(object):
         else:
             raise RuntimeError, "Invalid range given."
 
-
-    def clipPose(s, clip):
-        print "pose out clip"
+    def clipRun(s, char, clip, include=False, ignore=False):
+        """
+        Run the clip! Finally!!
+        if include, only run on what is selected.
+        if ignore, run on everything that is not selected.
+        """
+        data = dict((char.ref[a], dict((char.ref[c], d) for c, d in b.items())) for a, b in clip.clip.items())
+        selection = s.model.selection.current()
+        if include and ignore: raise AttributeError, "You cannot use both include and ignore at the same time."
+        if include:
+            print "only include selection"
+        elif ignore:
+            print "ignore selection"
+        print "running clip"
+        print "data", data
+        print "selection", selection
 
 
 ### TESTING
