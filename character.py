@@ -6,7 +6,6 @@ import reference
 import saveFile
 import os.path
 import getpass
-import image
 import shutil
 import time
 import uuid
