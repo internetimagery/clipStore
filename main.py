@@ -1,6 +1,7 @@
 # Lets run this thing!!
+# Created 15/10/15 Jason Dixon
+# http://internetimagery.com
 
-from collections import defaultdict as dd
 import character
 import os.path
 import os
@@ -235,34 +236,17 @@ class Main(object):
         if include, only run on what is selected.
         if ignore, run on everything that is not selected.
         """
-        from pprint import pprint
-        from json import loads, dumps
-        clipData = s.flipData(char, clip.clip) # Switch to real names
+        data = s.flipData(char, clip.clip) # Switch to real names
         selection = s.filterData(s.model.selection.current()) # Grab current selection
-        print "DATA:"
-        pprint(clipData)
+        # Filter out data live!
         if include and ignore:
             raise AttributeError, "You cannot use both include and ignore at the same time."
         elif include:
-            data = dd(dict)
-            for o, attrs in selection.items():
-                if o in clipData:
-                    for at in attrs:
-                        if at in clipData[o]:
-                            data[o][at] = clipData[o][at]
+            data = dict( (a, dict( (c, data[a][c]) for c, d in b.items() if c in data[a] ) ) for a, b in selection.items() if a in data )
         elif ignore:
-            data = dd(dict)
-            for o, attrs in clipData.items():
-                for at in attrs:
-                    if o not in selection or at not in selection[o]:
-                        data[o][at] = clipData[o][at]
-            print "ignore selection"
-        else:
-            data = clipData
-        print "running clip"
-        pprint(loads(dumps(data)))
-        print "selection"
-        pprint(selection)
+            data =dict( (e, f) for e, f in dict( (a, dict( (c, d) for c, d in b.items() if a not in selection or c not in selection[a] ) ) for a, b in data.items() ).items() if f)
+        if data: # Check there is anything left to run after this!
+
 
 
 ### TESTING
