@@ -11,7 +11,7 @@ class Main(object):
         s.model = model
         s.software = software
 
-        s.ext = ".char" # File extension!
+        s.ext = ".clips" # File extension!
 
         # Load our Selector window
         view.selector(
@@ -55,7 +55,6 @@ class Main(object):
         if path:
             if os.path.isfile(path): os.remove(path)
             char = s.characterLoad(path)
-            s.characterEdit(char)
 
     def characterLoad(s, path):
         """
@@ -186,7 +185,10 @@ class Main(object):
         Pull out thumbs for use
         Return = [ thumb1, thumb2, ... ]
         """
-        return ["cube.png"]
+        imgs = clip.metadata.get("thumbs", False)
+        if imgs:
+            return [char.cache(imgs[a]) for a in sorted(imgs.keys())]
+        return ["savePaintSnapshot.png"]
 
     def clipCaptureThumbs(s, char, clip, camera, frameRange):
         """
@@ -196,19 +198,18 @@ class Main(object):
         frameNum = frameRange[1] - frameRange[0] # Number of frames
         thumbSize = 200
 
-        if frameNum == 0: # Single pose
+        if not frameNum: # Single pose
             thumbs = { 1 : s.model.captureThumb(thumbSize, camera, frameRange[0]) }
-        if frameNum <= 5: # Short clip
+        elif frameNum <= 5: # Short clip
             thumbs = {
-                1 : s.model.captureThumb(thumbSize, camera, frameRange[0])
-                2 : s.model.captureThumb(thumbSize, camera, frameRange[0] + frameNum * 0.5)
+                1 : s.model.captureThumb(thumbSize, camera, frameRange[0]),
+                2 : s.model.captureThumb(thumbSize, camera, frameRange[0] + frameNum * 0.5),
                 3 : s.model.captureThumb(thumbSize, camera, frameRange[1])
                 }
         else: # Long clip
             step = int(frameNum / 5) # Roughly every 5 frames.
             inc = float(frameNum) / step
             thumbs = dict( (a+1, s.model.captureThumb(thumbSize, camera, a * inc + frameRange[0])) for a in range(0, step+1) )
-        print thumbs
         clip.metadata["thumbs"] = thumbs
 
     def clipCaptureData(s, char, clip, frames):

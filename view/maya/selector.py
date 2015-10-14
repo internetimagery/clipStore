@@ -30,12 +30,12 @@ class Selector(object):
             l=i18n["selector.new"],
             style="iconAndTextHorizontal",
             font="boldLabelFont",
-            image="Ghost_ON.png",
+            image="publishAttributes.png",#"Ghost_ON.png",
             h=30,
             c=requestNew
         )
         cmds.separator()
-        cmds.scrollLayout(cr=True, bgc=[0.2,0.2,0.2])
+        cmds.scrollLayout(cr=True, h=400, bgc=[0.2,0.2,0.2])
         s.wrapper = cmds.columnLayout(adj=True)
         cmds.columnLayout()
         cmds.showWindow(s.window)

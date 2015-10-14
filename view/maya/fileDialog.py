@@ -12,7 +12,7 @@ class FileDialog(object):
             fileMode=3,
             okCaption=s.i18n["filedialog.openDir"],
             cancelCaption=s.i18n["cancel"],
-            fileFilter="Character File (*.char)"
+            fileFilter="Clips File (*.clips)"
         )
         return f[0] if f else None
     def load(s):
@@ -22,7 +22,7 @@ class FileDialog(object):
             fileMode=1,
             okCaption=s.i18n["filedialog.loadBtn"],
             cancelCaption=s.i18n["cancel"],
-            fileFilter="Character File (*.char)"
+            fileFilter="Clips File (*.clips)"
         )
         return f[0] if f else None
     def save(s):
@@ -32,6 +32,6 @@ class FileDialog(object):
             fileMode=0,
             okCaption=s.i18n["filedialog.saveBtn"],
             cancelCaption=s.i18n["cancel"],
-            fileFilter="Character File (*.char)"
+            fileFilter="Clips File (*.clips)"
         )
         return f[0] if f else None

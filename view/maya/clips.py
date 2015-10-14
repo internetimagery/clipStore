@@ -16,6 +16,10 @@ class Clips(object):
         s.clips = [] # Init clips!
         name = s.char.metadata["name"].title()
 
+        if not char.data: # Does the character contain nothing?
+            with warn:
+                requestCharEdit(char, s.refresh)
+
         s.winName = "%sWin" % name
         if cmds.window(s.winName, ex=True):
             cmds.deleteUI(s.winName)
@@ -97,8 +101,11 @@ class Clip(object):
         cmds.columnLayout(adj=True, bgc=[0.18,0.18,0.18], p=parent) # Main block
         s.i18n = i18n
         s.name = clip.metadata["name"].title()
-        # s.imgSmall = char.cache(clip.metadata["thumbs"]["small"]) if clip.metadata["thumbs"].get("small", False) else "ghostOff.png"
-        s.thumbs = requestClipThumbs()
+        s.thumbs = requestClipThumbs(char, clip)
+        if s.thumbs:
+            s.thumbs.reverse()
+        else:
+            s.thumbs = ["ghostOff.png"]
         s.index = 0
         s.imgbtn = cmds.iconTextButton(
             ann=i18n["clips.addClip"],
