@@ -197,10 +197,11 @@ class Main(object):
         if not len(frameRange) == 2: raise RuntimeError, "Invalid frame range %s" % frameRange
         frameNum = frameRange[1] - frameRange[0] # Number of frames
         thumbSize = 200
+        stepSize = 5 # Size to jump across frames
 
         if not frameNum: # Single pose
             thumbs = { 1 : s.model.captureThumb(thumbSize, camera, frameRange[0]) }
-        elif frameNum <= 5: # Short clip
+        elif frameNum < stepSize * 2: # Short clip. Any less and less than 3 images are created.
             thumbs = {
                 1 : s.model.captureThumb(thumbSize, camera, frameRange[0]),
                 2 : s.model.captureThumb(thumbSize, camera, frameRange[0] + frameNum * 0.5),

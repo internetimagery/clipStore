@@ -11,6 +11,8 @@ class Selector(object):
         s.i18n = i18n
         s.sendOpen = sendOpen # Ask to open a file
         path = cmds.workspace(q=True, rd=True) # Default starting Dir
+        if "default" in path: # Ignore default workspace...
+            path = os.path.expanduser("~")
         s.files = {}
 
         s.winName = "PrimaryWin"

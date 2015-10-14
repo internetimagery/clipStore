@@ -144,11 +144,11 @@ class Clip(object):
                 clip.metadata["name"] = text
                 char.save()
                 cmds.text(s.label, e=True, l=text)
-    # def next(s):
-    #     s.index = s.index - 1 if s.index else len(s.thumbs) - 1
-    #     cmds.iconTextButton(s.imgbtn, e=True, image=s.thumbs[s.index])
+    def next(s):
+        s.index = s.index - 1 if s.index else len(s.thumbs) - 1
+        cmds.iconTextButton(s.imgbtn, e=True, image=s.thumbs[s.index])
 
-import traceback, sys
+# import traceback, sys
 
 class AnimManager(object):
     """
@@ -164,7 +164,7 @@ class AnimManager(object):
             for anim in s.anims:
                 anim.next() # Next frame
         except:
-            traceback.print_exception(*sys.exc_info())
+            # traceback.print_exception(*sys.exc_info())
             print "Animation Stopped."
             s.stop = True
     def run(s):
