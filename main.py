@@ -223,9 +223,8 @@ class Main(object):
         Insert into clip = { object : { attribute : [val1, val2, val3, ... ]} }
         """
         if len(frames) == 2:
-            filtered = s.filterData(char.data) # Filter data
             named = s.flipData(char, char.data) # Convert to real names
-            capture = s.model.clip.capture(named, frames) # Capture data
+            capture = s.model.clip.capture(named, frames) # Capture all data
             clip.clip = s.flipData(char, capture) # Revert data to ID's
         else:
             raise RuntimeError, "Invalid range given."
@@ -236,7 +235,10 @@ class Main(object):
         if include, only run on what is selected.
         if ignore, run on everything that is not selected.
         """
-        data = s.flipData(char, clip.clip) # Switch to real names
+        charData = s.filterData(char.data) # Pull out our base data
+        # Filter off clip data to our match our character base data
+        data = dict( (a, dict( (c, d) for c, d in b.items() if c in charData[a] )) for a, b in clip.clip.items() if a in charData )
+        data = s.flipData(char, data) # Switch to real names
         selection = s.filterData(s.model.selection.current()) # Grab current selection
         # Filter out data live!
         if include and ignore:
