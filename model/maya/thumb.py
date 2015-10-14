@@ -19,7 +19,7 @@ class Thumb(object):
     """
     Capture thumbnails etc
     """
-    def capture(pixels, camera, frame):
+    def capture(s, pixels, camera, frame):
         """
         Capture a thumbnail
         """

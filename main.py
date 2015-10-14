@@ -246,4 +246,4 @@ class Main(object):
         elif ignore:
             data =dict( (e, f) for e, f in dict( (a, dict( (c, d) for c, d in b.items() if a not in selection or c not in selection[a] ) ) for a, b in data.items() ).items() if f)
         if data: # Check there is anything left to run after this!
-            s.model.runClip(data) # FINALLY after all this craziness. Lets pose out our animation!
+            s.model.clip.replay(data) # FINALLY after all this craziness. Lets pose out our animation!
