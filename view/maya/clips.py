@@ -1,6 +1,9 @@
 # Clips window
 
+import maya.utils as utils
 import maya.cmds as cmds
+import threading
+import time
 import warn
 
 class Clips(object):
@@ -82,6 +85,7 @@ class Clips(object):
                     s.refresh
                     ))
                 s.clips[-1].resize(100)
+            AnimManager(s.wrapper, s.clips).play()
 
 class Clip(object):
     """
@@ -130,3 +134,29 @@ class Clip(object):
                 clip.metadata["name"] = text
                 char.save()
                 cmds.text(s.label, e=True, l=text)
+
+import traceback, sys
+
+class AnimManager(object):
+    """
+    Play animations on the buttons.
+    """
+    def __init__(s, wrapper, anims):
+        s.wrapper = wrapper
+        s.anims = anims
+        s.stop = False
+    def tick(s):
+        try:
+            if not cmds.layout(s.wrapper, ex=True): raise RuntimeError
+            for anim in s.anims:
+                anim.next() # Next frame
+        except:
+            traceback.print_exception(*sys.exc_info())
+            print "Animation Stopped."
+            s.stop = True
+    def run(s):
+        while not s.stop:
+            utils.executeDeferred(s.tick)
+            time.sleep(1)
+    def play(s):
+        threading.Thread(target=s.run).start()

@@ -176,22 +176,21 @@ class Main(object):
             s.i18n,
             char,
             clip,
-            s.clipCaptureThumb,
+            s.clipCaptureThumbs,
             s.characterSendData,
             s.clipCaptureData,
             refresh
             )
 
-    def clipCaptureThumb(s, char, clip, camera):
+    def clipCaptureThumbs(s, char, clip, camera, frameRange):
         """
         Load up thumbnails
         """
-        # thumbSmall = s.model.captureThumb(100, camera)
-        thumbLarge = s.model.captureThumb(400, camera)
-        clip.metadata["thumbs"] = {
-            # "small" : thumbSmall,
-            "large" : thumbLarge
+        firstFrame = frameRange[0]
+        thumbs = {
+            1, s.model.captureThumb(400, camera, firstFrame)
             }
+        clip.metadata["thumbs"] = thumbs
 
     def clipCaptureData(s, char, clip, frames):
         """

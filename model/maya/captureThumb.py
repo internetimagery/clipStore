@@ -15,7 +15,7 @@ class Temp_Path(str):
     def __getattribute__(s, k):
         raise AttributeError, "\"Temp_Path\" cannot be modified with \"%s\"" % k
 
-def CaptureThumb(pixels, camera):
+def CaptureThumb(pixels, camera, frame):
     """
     Capture a thumbnail
     """
@@ -28,13 +28,14 @@ def CaptureThumb(pixels, camera):
     view = cmds.playblast(activeEditor=True) # Panel to capture from
     oldCam = cmds.modelEditor(view, q=True, camera=True) # Existing camera
     display = cmds.modelEditor(view, q=True, displayAppearance=True)
-    frame = cmds.currentTime(q=True) # Get current time
+    oldFrame = cmds.currentTime(q=True) # Get current time
     imgFormat = cmds.getAttr("defaultRenderGlobals.imageFormat")
     selection = cmds.ls(sl=True)
     # Create a temporary file to hold the thumbnail
     with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as f: path = Temp_Path(f.name)
     # Capture our thumbnail
     try:
+        cmds.currentTime(frame)
         cmds.modelEditor(view, e=True, camera=camera) # Change to camera
         cmds.modelEditor(view, e=True, displayAppearance="smoothShaded") # Set display mode
         cmds.select(cl=True) # Clear selection for pretty image
@@ -51,8 +52,9 @@ def CaptureThumb(pixels, camera):
             )
     # Put everything back as we found it.
     finally:
-        cmds.setAttr("defaultRenderGlobals.imageFormat", imgFormat)
+        cmds.currentTime(oldFrame)
         cmds.select(selection, r=True)
         cmds.modelEditor(view, e=True, camera=oldCam)
         cmds.modelEditor(view, e=True, displayAppearance=display)
+        cmds.setAttr("defaultRenderGlobals.imageFormat", imgFormat)
     return path
