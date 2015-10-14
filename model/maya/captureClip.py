@@ -9,7 +9,7 @@ def CaptureClip(data, frames):
     """
     Capture a characters current pose or animation information
     Accepts =
-        data = { object : [ attribute ] }
+        data = { object : { attribute : None } }
         frames = [frameStart, frameEnd]
     """
     newData = dd(lambda:dd(list))

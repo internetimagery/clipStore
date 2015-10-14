@@ -1,5 +1,6 @@
 # Lets run this thing!!
-from pprint import pprint
+
+from collections import defaultdict as dd
 import character
 import os.path
 import os
@@ -217,16 +218,14 @@ class Main(object):
         """
         Capture Data
         Accepts =
-            data = { objects : { attribtes : True/False } }
             frames = [ frameStart, frameEnd ]
         Insert into clip = { object : { attribute : [val1, val2, val3, ... ]} }
         """
         if len(frames) == 2:
-            # Trim out "false" attributes, create { object : [ attribute1, attribute2, ... ] }
-            filteredData = dict( (a, [c for c, d in b.items() if d] ) for a, b in s.characterSendData(char).items())
-            data = s.model.captureClip(filteredData, frames)
-            # Revert the data back into ID's
-            clip.clip = dict((char.ref[a], dict((char.ref[c], d) for c, d in b.items())) for a, b in data.items())
+            filtered = s.filterData(char.data) # Filter data
+            named = s.flipData(char, char.data) # Convert to real names
+            capture = s.model.captureClip(named, frames) # Capture data
+            clip.clip = s.flipData(char, capture) # Revert data to ID's
         else:
             raise RuntimeError, "Invalid range given."
 
@@ -236,16 +235,36 @@ class Main(object):
         if include, only run on what is selected.
         if ignore, run on everything that is not selected.
         """
-        data = dict((char.ref[a], dict((char.ref[c], d) for c, d in b.items())) for a, b in clip.clip.items())
-        selection = s.model.selection.current()
-        if include and ignore: raise AttributeError, "You cannot use both include and ignore at the same time."
-        if include:
+        from pprint import pprint
+        from json import loads, dumps
+        clipData = s.flipData(char, clip.clip) # Switch to real names
+        selection = s.model.selection.current() # Grab current selection
+        print "DATA:"
+        pprint(clipData)
+        if include and ignore:
+            raise AttributeError, "You cannot use both include and ignore at the same time."
+        elif include:
+            data = dd(dict)
+            for o, attrs in selection.items():
+                if o in clipData:
+                    for at in attrs:
+                        if at in clipData[o][at]:
+                            data[o][at] = clipData[o][at]
             print "only include selection"
         elif ignore:
+            data = dd(dict)
+            for o, attrs in clipData.items():
+                if o in selection:
+                    for at in attrs:
+                        if at in selection[o][at]:
+                            data[o][at] = clipData[o][at]
             print "ignore selection"
+        else:
+            data = clipData
         print "running clip"
-        print "data", data
-        print "selection", selection
+        pprint(loads(dumps(data)))
+        print "selection"
+        pprint(selection)
 
 
 ### TESTING

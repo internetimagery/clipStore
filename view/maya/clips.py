@@ -2,9 +2,11 @@
 
 import maya.utils as utils
 import maya.cmds as cmds
+import traceback
 import threading
 import time
 import warn
+import sys
 
 class Clips(object):
     def __init__(s, i18n, char, requestCharEdit, requestClipEdit, requestClipThumbs, sendRunClip):
@@ -67,7 +69,7 @@ class Clips(object):
         cmds.scriptJob(uid=[s.window, s.cleanup], ro=True)
         s.refresh()
     def cleanup(s):
-        print "cleanup"
+        print "Closed"
     def sizeClips(s, val):
         cmds.gridLayout(s.wrapper, e=True, cwh=[val,val+20])
         if s.clips:
@@ -78,20 +80,23 @@ class Clips(object):
             cmds.deleteUI(cmds.layout(s.wrapper, q=True, ca=True))
         except RuntimeError:
             pass
-        s.clips = [] # GUI clips
-        if s.char.clips:
-            for c in s.char.clips:
-                s.clips.append(Clip(
-                    s.i18n,
-                    s.wrapper,
-                    s.char,
-                    c,
-                    s.requestClipThumbs,
-                    s.sendRunClip,
-                    s.refresh
-                    ))
-                s.clips[-1].resize(100)
-            AnimManager(s.wrapper, s.clips).play()
+        try:
+            s.clips = [] # GUI clips
+            if s.char.clips:
+                for c in s.char.clips:
+                    s.clips.append(Clip(
+                        s.i18n,
+                        s.wrapper,
+                        s.char,
+                        c,
+                        s.requestClipThumbs,
+                        s.sendRunClip,
+                        s.refresh
+                        ))
+                    s.clips[-1].resize(100)
+                AnimManager(s.wrapper, s.clips).play()
+        except:
+            traceback.print_exception(*sys.exc_info())
 
 class Clip(object):
     """
@@ -115,7 +120,7 @@ class Clip(object):
         s.imgbtn = cmds.iconTextButton(
             ann=i18n["clips.addClip"],
             style="iconOnly",#"iconAndTextVertical",
-            image=s.thumbs[0],
+            image=s.thumbs[-1],
             c=lambda: warn.run(sendRunClip, char, clip)
             )
         s.label = cmds.text(l=s.name, h=20)
@@ -166,8 +171,6 @@ class Clip(object):
     def next(s):
         s.index = s.index - 1 if 0 <= s.index else len(s.thumbs) - 1
         cmds.iconTextButton(s.imgbtn, e=True, image=s.thumbs[s.index])
-
-# import traceback, sys
 
 class AnimManager(object):
     """

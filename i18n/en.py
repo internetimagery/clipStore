@@ -33,10 +33,10 @@ En = {
     "filedialog.saveBtn"                : "Save Character",
     "filedialog.openDir"                : "Select a Folder",
 
-    "selector.title"                    : "Pick a Character file:",
+    "selector.title"                    : "Pick a Clip file:",
     "selector.none"                     : "There are no Clip files in this folder.",
-    "selector.open"                     : "Open a folder containing Characters",
-    "selector.new"                      : "Create a new Character.",
+    "selector.open"                     : "Open a folder containing Clips",
+    "selector.new"                      : "Create a new Clip file.",
 
     "clips.title"                       : "Clips",
     "clips.editChar"                    : "Click to change the characters details",

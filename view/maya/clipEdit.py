@@ -2,7 +2,6 @@
 # Created 14/10/15 Jason Dixon
 # http://internetimagery.com
 
-from pprint import pprint
 import maya.cmds as cmds
 import os.path
 import time
