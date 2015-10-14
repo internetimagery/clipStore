@@ -98,8 +98,10 @@ class Clip(object):
     Single clip
     """
     def __init__(s, i18n, parent, char, clip, requestClipThumbs, sendRunClip, refresh):
-        cmds.columnLayout(adj=True, bgc=[0.18,0.18,0.18], p=parent) # Main block
+        s.wrapper = cmds.columnLayout(adj=True, bgc=[0.18,0.18,0.18], p=parent) # Main block
         s.i18n = i18n
+        s.char = char
+        s.clip = clip
         s.name = clip.metadata["name"].title()
         s.thumbs = requestClipThumbs(char, clip)
         if s.thumbs:
@@ -123,8 +125,13 @@ class Clip(object):
         cmds.menuItem(d=True)
         cmds.menuItem(l=i18n["clips.renameClip"], c=lambda x: s.rename(char, clip))
         cmds.menuItem(ob=True, obi="pencilCursor.png")
-        cmds.menuItem(l=i18n["clips.deleteClip"], c=lambda x: refresh(warn.run(char.removeClip, clip)))
+        cmds.menuItem(l=i18n["clips.deleteClip"], c=lambda x: s.delete())
         cmds.menuItem(ob=True, obi="SP_TrashIcon.png")
+    def delete(s):
+        # Delete itself
+        with warn:
+            s.char.removeClip(s.clip)
+            cmds.layout(s.wrapper, e=True, m=False)
     def resize(s, size):
         # img = s.imgSmall if size < 150 else s.imgLarge
         # cmds.iconTextButton(s.img, e=True, w=size, h=size, i=img)
