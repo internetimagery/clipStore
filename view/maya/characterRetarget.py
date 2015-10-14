@@ -19,7 +19,7 @@ class CharacterRetarget(object):
 
         winName = "CharacterEditWin"
         if cmds.window(winName, ex=True): cmds.deleteUI(winName)
-        s.window = cmds.window(t="%s :: %s" % (s.i18n["characterRetarget.title"], name), rtf=True)
+        s.window = cmds.window(s=False, t="%s :: %s" % (s.i18n["characterRetarget.title"], name), rtf=True)
         cmds.columnLayout(adj=True)
         # Title
         cmds.text(l="<h1>%s</h1>" % name)
@@ -28,7 +28,7 @@ class CharacterRetarget(object):
             l=s.i18n["characterRetarget.return"],
             image="goToBindPose.png",
             style="iconAndTextHorizontal",
-            c=lambda: warn.run(requestEdit, s.char)
+            c=lambda: warn.run(requestEdit, s.char, lambda: None)
         )
         cmds.separator()
         cmds.rowLayout(nc=3, adj=2)

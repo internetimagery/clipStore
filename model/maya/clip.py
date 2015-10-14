@@ -44,17 +44,21 @@ class Clip(object):
             else:
                 print "%s could not be found. Skipping!" % o
         # Ok our data is now valid. Lets get a posin! Phew. The final step...
-        try:
-            # Flip the values for more efficient function calls
-            while True:
-                cache = dd(list)
-                for o, val in validData.items():
-                    cache[val[index]].append(o)
-                for val, o in cache.items(): # Keyframe the positions
-                    cmds.setKeyframe(o, t=frame, v=val)
-                frame += 1
-                index += 1
-        except IndexError:
-            pass
+        try: # Open undo block!
+            cmds.undoInfo(openChunk=True)
+            try:
+                # Flip the values for more efficient function calls
+                while True:
+                    cache = dd(list)
+                    for o, val in validData.items():
+                        cache[val[index]].append(o)
+                    for val, o in cache.items(): # Keyframe the positions
+                        cmds.setKeyframe(o, t=frame, v=val)
+                    frame += 1
+                    index += 1
+            except IndexError:
+                cmds.currentTime(frame) # Jump to final frame
+        finally:
+            cmds.undoInfo(closeChunk=True)
 
 Clip = Clip()

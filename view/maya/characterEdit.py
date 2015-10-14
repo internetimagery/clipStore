@@ -20,7 +20,7 @@ class CharacterEdit(object):
 
         winName = "CharacterEditWin"
         if cmds.window(winName, ex=True): cmds.deleteUI(winName)
-        s.window = cmds.window(t="%s :: %s" % (s.i18n["characterEdit.title"], name), rtf=True)
+        s.window = cmds.window(t="%s :: %s" % (s.i18n["characterEdit.title"], name), rtf=True, s=False)
         cmds.columnLayout(adj=True)
         # Title
         cmds.text(l="<h1>%s</h1>" % name)

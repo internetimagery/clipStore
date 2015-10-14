@@ -25,7 +25,7 @@ class Clips(object):
         s.winName = "%sWin" % name
         if cmds.window(s.winName, ex=True):
             cmds.deleteUI(s.winName)
-        s.window = cmds.window(s.winName, rtf=True, t="%s %s" % (name, i18n["clips.title"]))
+        s.window = cmds.window(s.winName, rtf=True, s=False, t="%s %s" % (name, i18n["clips.title"]))
         cmds.columnLayout(adj=True)
         cmds.rowLayout(nc=2, adj=2) # Open Row
         cmds.iconTextButton(
@@ -60,8 +60,8 @@ class Clips(object):
             )
         cmds.separator()
         cmds.frameLayout(l=i18n["clips.moreInfo"], font="tinyBoldLabelFont")
-        cmds.scrollLayout(cr=True, mcw=400, bgc=[0.2,0.2,0.2], h=400)
-        s.wrapper = cmds.gridLayout(cwh=[100, 120], cr=True)
+        cmds.scrollLayout(cr=True, bgc=[0.2,0.2,0.2], h=400)
+        s.wrapper = cmds.gridLayout(w=400, cwh=[100, 120], cr=True, aec=False)
         cmds.setParent("..") # Close grid
         cmds.setParent("..") # Close Scroll
         cmds.separator()

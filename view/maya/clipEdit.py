@@ -51,7 +51,7 @@ class ClipEdit(object):
         s.winName = "ClipNewWin"
         if cmds.window(s.winName, ex=True):
             cmds.deleteUI(s.winName)
-        s.window = cmds.window(s.winName, rtf=True, t=s.i18n["clipEdit.title"])
+        s.window = cmds.window(s.winName, rtf=True, s=False, t=s.i18n["clipEdit.title"])
         mainLayout = cmds.columnLayout()
         ## CAMERA CONTROLS
         s.camLayout = cmds.paneLayout(h=s.winWidth, w=s.winWidth, p=mainLayout)
