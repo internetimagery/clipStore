@@ -70,6 +70,7 @@ class Main(object):
                 char,
                 s.characterEdit,
                 s.clipEdit,
+                s.clipCacheThumbs,
                 s.clipRun
                 )
             return char
@@ -113,14 +114,15 @@ class Main(object):
     def characterAddObjects(s, char):
         """
         Add some new objects / attributes to the character from selection
-        Accepts = { object : [attribute1, attribute2, ... ] }
         """
         selection = s.model.selection.current() # Grab current selection.
         if selection:
             # Grab all inactive attributes so we can skip them in the adding process
             exclusions = set([c for a, b in char.data.items() for c, d in b.items() if not d])
             # Create new entry
-            new = dict((char.ref[a], dict((char.ref[c], False if char.ref[c] in exclusions else True) for c in b)) for a, b in selection.items() if a not in char.data)
+            new = dict((a, dict((c, False if c in exclusions else True) for c in b)) for a, b in selection.items() if a not in char.data)
+            # Convert entry to ID's
+            new = s.flipData(char, new)
             # Add entry to existing data
             char.data = dict(char.data, **new)
         else: raise RuntimeError, "Nothing selected."
@@ -155,9 +157,6 @@ class Main(object):
     def characterEditReference(s, char, old, new):
         """
         Change a reference to to point from one object to another.
-        Accepts =
-            old = "objname"
-            new = { newObject : [attribute1, attribute2, ... ] }
         """
         oldID = char.ref[old]
         char.ref[oldID] = new
@@ -182,14 +181,34 @@ class Main(object):
             refresh
             )
 
+    def clipCacheThumbs(s, char, clip):
+        """
+        Pull out thumbs for use
+        Return = [ thumb1, thumb2, ... ]
+        """
+        return ["cube.png"]
+
     def clipCaptureThumbs(s, char, clip, camera, frameRange):
         """
         Load up thumbnails
         """
-        firstFrame = frameRange[0]
-        thumbs = {
-            1, s.model.captureThumb(400, camera, firstFrame)
-            }
+        if not len(frameRange) == 2: raise RuntimeError, "Invalid frame range %s" % frameRange
+        frameNum = frameRange[1] - frameRange[0] # Number of frames
+        thumbSize = 200
+
+        if frameNum == 0: # Single pose
+            thumbs = { 1 : s.model.captureThumb(thumbSize, camera, frameRange[0]) }
+        if frameNum <= 5: # Short clip
+            thumbs = {
+                1 : s.model.captureThumb(thumbSize, camera, frameRange[0])
+                2 : s.model.captureThumb(thumbSize, camera, frameRange[0] + frameNum * 0.5)
+                3 : s.model.captureThumb(thumbSize, camera, frameRange[1])
+                }
+        else: # Long clip
+            step = int(frameNum / 5) # Roughly every 5 frames.
+            inc = float(frameNum) / step
+            thumbs = dict( (a+1, s.model.captureThumb(thumbSize, camera, a * inc + frameRange[0])) for a in range(0, step+1) )
+        print thumbs
         clip.metadata["thumbs"] = thumbs
 
     def clipCaptureData(s, char, clip, frames):

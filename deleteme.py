@@ -1,57 +1,25 @@
 
+# range 1 ... 45
+# 1, 5, 10, 15, 20, 25, 30, 35, 40, 45 !!
 
-# animated images in button
-import maya.cmds as cmds
-import maya.utils as utils
-import time
-from threading import Thread
+# Diff = max - min : 44 # Full range the frames cover
+# Step = int(Diff / 5) : 8 # How many steps to take, to make each chunk 5 rounded down
+# Inc = Diff / Step : Given number of steps, how large is each step?
 
-win = cmds.window()
-cmds.columnLayout()
-btn = cmds.iconTextButton(
-            style="iconOnly",
-            image="goToBindPose.png",
-            h=50,
-            w=50,
-        )
-cmds.showWindow(win)
+def printR(r):
+    Diff = (r[1] - r[0]) # Number of frames in that range inclusive
+    print "diff", Diff
+    step = int(Diff / 5) # How many steps will be in the range? Near enough?
+    print "step", step
+    inc = float(Diff) / step # How large is each step?
+    print "inc", inc
+    print [a * inc + r[0] for a in range(0, step + 1)]
+    # for i in range(1, diff + 1):
+    #     print i
 
-class Anim(object):
-    def __init__(s, element, images):
-        s.element = element
-        s.images = images
-        s.index = 0
-    def next(s):
-        s.index = s.index - 1 if s.index else len(s.images) - 1
-        cmds.iconTextButton(s.btn, e=True, image=s.images[s.index])
-
-class AnimManager(object):
-    def __init__(s, anims):
-        s.anims = anims
-    def update(s):
-        anims = []
-        for anim in s.anims:
-            if anim.next():
-                anims.append(anim)
-        s.anims = anims
-    def run(s):
-        while True:
-            if s.anims:
-                utils.executeDeferred(s.update)
-                time.sleep(1)
-            else:
-                break
-
-images = ["activeDeselectedAnimLayer.png", "activeSelectedAnimLayer.png"]
-
-def switch():
-    buttons = [t(btn, images)]
-    while True:
-        if not buttons:
-            break
-        time.sleep(1)
-        for b in buttons:
-            if not utils.executeInMainThreadWithResult(b.run):
-                buttons.remove(b)
-
-Thread(target=switch).start()
+print "--- 1, 45"
+printR([1, 45])
+print "--- 5, 32"
+printR([5, 32])
+print "--- 61, 82"
+printR([61, 82])

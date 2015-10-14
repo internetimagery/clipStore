@@ -7,10 +7,11 @@ import time
 import warn
 
 class Clips(object):
-    def __init__(s, i18n, char, requestCharEdit, requestClipEdit, sendRunClip):
+    def __init__(s, i18n, char, requestCharEdit, requestClipEdit, requestClipThumbs, sendRunClip):
         s.i18n = i18n
         s.char = char
         s.requestClipEdit = requestClipEdit # We're asking to edit the clip
+        s.requestClipThumbs = requestClipThumbs # Grab thumbnails
         s.sendRunClip = sendRunClip # User wants to place the clip
         s.clips = [] # Init clips!
         name = s.char.metadata["name"].title()
@@ -81,6 +82,7 @@ class Clips(object):
                     s.wrapper,
                     s.char,
                     c,
+                    s.requestClipThumbs,
                     s.sendRunClip,
                     s.refresh
                     ))
@@ -91,20 +93,21 @@ class Clip(object):
     """
     Single clip
     """
-    def __init__(s, i18n, parent, char, clip, sendRunClip, refresh):
+    def __init__(s, i18n, parent, char, clip, requestClipThumbs, sendRunClip, refresh):
         cmds.columnLayout(adj=True, bgc=[0.18,0.18,0.18], p=parent) # Main block
         s.i18n = i18n
         s.name = clip.metadata["name"].title()
         # s.imgSmall = char.cache(clip.metadata["thumbs"]["small"]) if clip.metadata["thumbs"].get("small", False) else "ghostOff.png"
-        s.imgLarge = char.cache(clip.metadata["thumbs"]["large"]) if clip.metadata["thumbs"].get("large", False) else "ghostOff.png"
-        s.img = cmds.iconTextButton(
+        s.thumbs = requestClipThumbs()
+        s.index = 0
+        s.imgbtn = cmds.iconTextButton(
             ann=i18n["clips.addClip"],
             style="iconOnly",#"iconAndTextVertical",
-            image=s.imgLarge,
+            image=s.thumbs[0],
             c=lambda: warn.run(sendRunClip, char, clip)
             )
         s.label = cmds.text(l=s.name, h=20)
-        cmds.popupMenu(p=s.img)
+        cmds.popupMenu(p=s.imgbtn)
         cmds.menuItem(l=s.name, en=False, itl=True)
         cmds.menuItem(l=i18n["clips.ignoreSel"], c=lambda x: warn.run(sendRunClip, char, clip, ignore=True))
         cmds.menuItem(ob=True, obi="channelBoxMedium.png")
@@ -118,7 +121,7 @@ class Clip(object):
     def resize(s, size):
         # img = s.imgSmall if size < 150 else s.imgLarge
         # cmds.iconTextButton(s.img, e=True, w=size, h=size, i=img)
-        cmds.iconTextButton(s.img, e=True, w=size, h=size)
+        cmds.iconTextButton(s.imgbtn, e=True, w=size, h=size)
     def rename(s, char, clip):
         result = cmds.promptDialog(
     		title=s.i18n["clips.renameClip"],
@@ -134,6 +137,9 @@ class Clip(object):
                 clip.metadata["name"] = text
                 char.save()
                 cmds.text(s.label, e=True, l=text)
+    # def next(s):
+    #     s.index = s.index - 1 if s.index else len(s.thumbs) - 1
+    #     cmds.iconTextButton(s.imgbtn, e=True, image=s.thumbs[s.index])
 
 import traceback, sys
 
