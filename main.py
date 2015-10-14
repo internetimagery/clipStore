@@ -34,7 +34,7 @@ class Main(object):
         Filter out empty attributes and objects from Data
         Strcuture { object : { attribute : True/False } }
         """
-        return dict((e, f) for e, f in dict( (a, [c for c, d in b.items() if d] ) for a, b in data.items()).items() if f)
+        return dict((e, f) for e, f in dict( (a, dict((c, d) for c, d in b.items() if d) ) for a, b in data.items()).items() if f)
 
     def sendFiles(s, path=None):
         """
@@ -198,7 +198,7 @@ class Main(object):
         if not len(frameRange) == 2: raise RuntimeError, "Invalid frame range %s" % frameRange
         frameNum = frameRange[1] - frameRange[0] # Number of frames
         thumbSize = 200
-        stepSize = 5 # Size to jump across frames
+        stepSize = 3 # 5 # Size to jump across frames
 
         if not frameNum: # Single pose
             thumbs = { 1 : s.model.captureThumb(thumbSize, camera, frameRange[0]) }
@@ -250,14 +250,12 @@ class Main(object):
                     for at in attrs:
                         if at in clipData[o]:
                             data[o][at] = clipData[o][at]
-            print "only include selection"
         elif ignore:
             data = dd(dict)
             for o, attrs in clipData.items():
-                if o in selection:
-                    for at in attrs:
-                        if at in selection[o]:
-                            data[o][at] = clipData[o][at]
+                for at in attrs:
+                    if o not in selection or at not in selection[o]:
+                        data[o][at] = clipData[o][at]
             print "ignore selection"
         else:
             data = clipData

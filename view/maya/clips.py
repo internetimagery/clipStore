@@ -173,13 +173,11 @@ class Clip(object):
         cmds.iconTextButton(s.imgbtn, e=True, image=s.thumbs[s.index])
 
 class AnimManager(object):
-    """
-    Play animations on the buttons.
-    """
     def __init__(s, wrapper, anims):
         s.wrapper = wrapper
         s.anims = anims
-        s.stop = False
+        s.img = cmds.iconTextStaticLabel(style="iconOnly")
+        s.playing = False
     def tick(s):
         try:
             if not cmds.layout(s.wrapper, ex=True): raise RuntimeError
@@ -187,11 +185,14 @@ class AnimManager(object):
                 anim.next() # Next frame
         except:
             # traceback.print_exception(*sys.exc_info())
-            print "Animation Stopped."
-            s.stop = True
-    def run(s):
-        while not s.stop:
-            utils.executeDeferred(s.tick)
-            time.sleep(1)
+            s.playing = False
     def play(s):
-        threading.Thread(target=s.run).start()
+        if not s.playing:
+            def go():
+                while s.playing:
+                    utils.executeDeferred(s.tick)
+                    time.sleep(1)
+            s.playing = True
+            threading.Thread(target=go).start()
+    def stop(s):
+        s.playing = False
