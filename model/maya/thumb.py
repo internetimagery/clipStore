@@ -34,7 +34,15 @@ class Thumb(object):
         display = cmds.modelEditor(view, q=True, displayAppearance=True)
         oldFrame = cmds.currentTime(q=True) # Get current time
         imgFormat = cmds.getAttr("defaultRenderGlobals.imageFormat")
-        selection = cmds.ls(sl=True)
+        selection = cmds.ls(sl=True) # Current selection
+        playWin = cmds.playblast(ae=True) # Get playblast window
+        playDa = cmds.modelEditor(playWin, q=True, da=True)
+        playGrid = cmds.modelEditor(playWin, q=True, grid=True)
+        playAllObjects = True if cmds.modelEditor(playWin, q=True, allObjects=True) else False
+        playPolymeshes = cmds.modelEditor(playWin, q=True, polymeshes=True)
+        playAurbsSurfaces = cmds.modelEditor(playWin, q=True, nurbsSurfaces=True)
+        playSubdivSurfaces = cmds.modelEditor(playWin, q=True, subdivSurfaces=True)
+        playDisplayTextures = cmds.modelEditor(playWin, q=True, displayTextures=True)
         # Create a temporary file to hold the thumbnail
         with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as f: path = Temp_Path(f.name)
         # Capture our thumbnail
@@ -44,6 +52,17 @@ class Thumb(object):
             cmds.modelEditor(view, e=True, displayAppearance="smoothShaded") # Set display mode
             cmds.select(cl=True) # Clear selection for pretty image
             cmds.setAttr("defaultRenderGlobals.imageFormat", 32)
+            cmds.modelEditor( # Tweak nice default visuals
+                playWin,
+                e=True,
+                grid=False,
+                da="smoothShaded",
+                allObjects=False,
+                nurbsSurfaces=True,
+                polymeshes=True,
+                subdivSurfaces=True,
+                displayTextures=True
+                )
             cmds.playblast(
                 frame=frame, # Frame range
                 fo=True, # Force override the file if it exists
@@ -61,6 +80,18 @@ class Thumb(object):
             cmds.modelEditor(view, e=True, camera=oldCam)
             cmds.modelEditor(view, e=True, displayAppearance=display)
             cmds.setAttr("defaultRenderGlobals.imageFormat", imgFormat)
+            # Reset playblast options
+            cmds.modelEditor( # Tweak nice default visuals
+                playWin,
+                e=True,
+                grid=playGrid,
+                da=playDa,
+                allObjects=playAllObjects,
+                nurbsSurfaces=playAurbsSurfaces,
+                polymeshes=playPolymeshes,
+                subdivSurfaces=playSubdivSurfaces,
+                displayTextures=playDisplayTextures
+                )
         return path
 
 Thumb = Thumb()
