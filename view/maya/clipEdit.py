@@ -132,6 +132,8 @@ class ClipEdit(object):
                 frameRange = [frame, frame]
             else:
                 frameRange = s.range
+            # Add clip length
+            s.clip.metadata["length"] = (1 + frameRange[1]) - frameRange[0]
             # # Grab Clip
             s.requestClipCapture(s.char, s.clip, frameRange)
             # Grab Thumbnails

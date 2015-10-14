@@ -103,6 +103,9 @@ class Clip(object):
         s.char = char
         s.clip = clip
         s.name = clip.metadata["name"].title()
+        length = clip.metadata.get("length", None)
+        if length is not None:
+            s.name = "%s - %s" % (s.name, length)
         s.thumbs = requestClipThumbs(char, clip)
         if s.thumbs:
             s.thumbs.reverse()
@@ -130,8 +133,17 @@ class Clip(object):
     def delete(s):
         # Delete itself
         with warn:
-            s.char.removeClip(s.clip)
-            cmds.layout(s.wrapper, e=True, m=False)
+            ans = cmds.confirmDialog(
+                t=s.i18n["clips.deleteClip"],
+                m=s.i18n["clips.deleteConfirm"],
+                button=[s.i18n["yes"], s.i18n["no"]],
+                defaultButton=s.i18n["yes"],
+                cancelButton=s.i18n["no"],
+                dismissString=s.i18n["no"]
+                )
+            if ans == s.i18n["yes"]: # Are we ok to delete??
+                s.char.removeClip(s.clip)
+                cmds.layout(s.wrapper, e=True, m=False)
     def resize(s, size):
         # img = s.imgSmall if size < 150 else s.imgLarge
         # cmds.iconTextButton(s.img, e=True, w=size, h=size, i=img)
@@ -152,7 +164,7 @@ class Clip(object):
                 char.save()
                 cmds.text(s.label, e=True, l=text)
     def next(s):
-        s.index = s.index - 1 if s.index else len(s.thumbs) - 1
+        s.index = s.index - 1 if 0 <= s.index else len(s.thumbs) - 1
         cmds.iconTextButton(s.imgbtn, e=True, image=s.thumbs[s.index])
 
 # import traceback, sys

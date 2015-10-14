@@ -45,6 +45,7 @@ En = {
     "clips.renameClip"                  : "Rename this clip.",
     "clips.enterName"                   : "Enter a new name.",
     "clips.deleteClip"                  : "Delete the clip.",
+    "clips.deleteConfirm"               : "Are you sure you want to delete this clip?",
     "clips.ignoreSel"                   : "Apply the clip, ignoring anything selected.",
     "clips.includeSel"                  : "Apply the clip only to things selected.",
     "clips.moreInfo"                    : "Right click any Clip for more info and options. Drag the slider to resize clips.",
