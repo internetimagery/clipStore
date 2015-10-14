@@ -238,7 +238,7 @@ class Main(object):
         from pprint import pprint
         from json import loads, dumps
         clipData = s.flipData(char, clip.clip) # Switch to real names
-        selection = s.model.selection.current() # Grab current selection
+        selection = s.filterData(s.model.selection.current()) # Grab current selection
         print "DATA:"
         pprint(clipData)
         if include and ignore:
@@ -248,7 +248,7 @@ class Main(object):
             for o, attrs in selection.items():
                 if o in clipData:
                     for at in attrs:
-                        if at in clipData[o][at]:
+                        if at in clipData[o]:
                             data[o][at] = clipData[o][at]
             print "only include selection"
         elif ignore:
@@ -256,7 +256,7 @@ class Main(object):
             for o, attrs in clipData.items():
                 if o in selection:
                     for at in attrs:
-                        if at in selection[o][at]:
+                        if at in selection[o]:
                             data[o][at] = clipData[o][at]
             print "ignore selection"
         else:
