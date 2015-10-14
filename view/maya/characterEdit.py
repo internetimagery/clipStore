@@ -40,7 +40,8 @@ class CharacterEdit(object):
         )
         cmds.setParent("..")
         cmds.separator()
-        row = cmds.rowLayout(nc=3, adj=2)
+        # row = cmds.rowLayout(nc=3, adj=2)
+        row = cmds.paneLayout(cn="vertical2")
         # Begin Filters
         cmds.columnLayout(adj=True)
         cmds.text(l=i18n["characterEdit.filter"])
