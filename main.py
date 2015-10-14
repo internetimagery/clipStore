@@ -202,17 +202,17 @@ class Main(object):
         stepSize = 3 # 5 # Size to jump across frames
 
         if not frameNum: # Single pose
-            thumbs = { 1 : s.model.captureThumb(thumbSize, camera, frameRange[0]) }
+            thumbs = { 1 : s.model.thumb.capture(thumbSize, camera, frameRange[0]) }
         elif frameNum < stepSize * 2: # Short clip. Any less and less than 3 images are created.
             thumbs = {
-                1 : s.model.captureThumb(thumbSize, camera, frameRange[0]),
-                2 : s.model.captureThumb(thumbSize, camera, frameRange[0] + frameNum * 0.5),
-                3 : s.model.captureThumb(thumbSize, camera, frameRange[1])
+                1 : s.model.thumb.capture(thumbSize, camera, frameRange[0]),
+                2 : s.model.thumb.capture(thumbSize, camera, frameRange[0] + frameNum * 0.5),
+                3 : s.model.thumb.capture(thumbSize, camera, frameRange[1])
                 }
         else: # Long clip
             step = int(frameNum / 5) # Roughly every 5 frames.
             inc = float(frameNum) / step
-            thumbs = dict( (a+1, s.model.captureThumb(thumbSize, camera, a * inc + frameRange[0])) for a in range(0, step+1) )
+            thumbs = dict( (a+1, s.model.thumb.capture(thumbSize, camera, a * inc + frameRange[0])) for a in range(0, step+1) )
         clip.metadata["thumbs"] = thumbs
 
     def clipCaptureData(s, char, clip, frames):
@@ -225,7 +225,7 @@ class Main(object):
         if len(frames) == 2:
             filtered = s.filterData(char.data) # Filter data
             named = s.flipData(char, char.data) # Convert to real names
-            capture = s.model.captureClip(named, frames) # Capture data
+            capture = s.model.clip.capture(named, frames) # Capture data
             clip.clip = s.flipData(char, capture) # Revert data to ID's
         else:
             raise RuntimeError, "Invalid range given."
@@ -246,11 +246,4 @@ class Main(object):
         elif ignore:
             data =dict( (e, f) for e, f in dict( (a, dict( (c, d) for c, d in b.items() if a not in selection or c not in selection[a] ) ) for a, b in data.items() ).items() if f)
         if data: # Check there is anything left to run after this!
-
-
-
-### TESTING
-# import animCopy.view.maya as view
-# import animCopy.model.maya as model
-# import animCopy.i18n as i18n
-# Main(i18n.en, view, model, "maya")
+            s.model.runClip(data) # FINALLY after all this craziness. Lets pose out our animation!
