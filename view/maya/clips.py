@@ -178,6 +178,7 @@ class AnimManager(object):
         s.anims = anims
         s.img = cmds.iconTextStaticLabel(style="iconOnly")
         s.playing = False
+        s.counter = threading.Semaphore(5) # Limit calls while maya is busy
     def tick(s):
         try:
             if not cmds.layout(s.wrapper, ex=True): raise RuntimeError
@@ -186,11 +187,14 @@ class AnimManager(object):
         except:
             # traceback.print_exception(*sys.exc_info())
             s.playing = False
+        finally:
+            s.counter.release()
     def play(s):
         if not s.playing:
             def go():
                 while s.playing:
-                    utils.executeDeferred(s.tick)
+                    if s.counter.acquire(False):
+                        utils.executeDeferred(s.tick)
                     time.sleep(1)
             s.playing = True
             threading.Thread(target=go).start()
