@@ -58,4 +58,8 @@ En = {
     "characterRetarget.toDesc"          : "Select the desired object / attribute and click the button.",
     "characterRetarget.confirm"         : "Just confirming...",
     "characterRetarget.targetConfirm"   : "Try and be sure the new target shares similar object names and attribute names.\nThings can break if you're not careful.\nAre you sure?",
+    "characterRetarget.search"          : "Search",
+    "characterRetarget.replace"         : "Replace",
+    "characterRetarget.regex"           : "Use Regex",
+    # "characterRetarget.search"          : "Search",
 }

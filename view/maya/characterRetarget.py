@@ -2,9 +2,11 @@
 # Created 12/10/15 Jason Dixon
 # http://internetimagery.com
 
-
+from collections import defaultdict as dd
 import maya.cmds as cmds
+import fnmatch
 import warn
+import re
 
 class CharacterRetarget(object):
     def __init__(s, i18n, char, requestEdit, requestObjects, sendRetarget):
@@ -15,7 +17,9 @@ class CharacterRetarget(object):
         name = s.char.metadata["name"].title()
 
         s.colWidth = 300
-        s.rowHeight = 30
+        s.rowHeight = 25
+        s.allItems = set()
+        s.values = dd(str)
 
         winName = "CharacterEditWin"
         if cmds.window(winName, ex=True): cmds.deleteUI(winName)
@@ -33,16 +37,30 @@ class CharacterRetarget(object):
         frameLay = cmds.frameLayout(cll=True, l="Replace in bulk", p=mainLayout)
         rowLayout = cmds.rowLayout(nc=3, adj=2)
         cmds.columnLayout(adj=True, p=rowLayout)
-        cmds.text(l="Search", w=s.colWidth, h=s.rowHeight)
-        cmds.textField(w=s.colWidth, h=s.rowHeight)
+        cmds.text(l=s.i18n["characterRetarget.search"], w=s.colWidth, h=s.rowHeight)
+        cmds.textFieldGrp(
+            adj=1,
+            w=s.colWidth,
+            h=s.rowHeight,
+            tcc=lambda x: s.updateValue("search", x))
         cmds.columnLayout(adj=True, p=rowLayout)
         cmds.text(l="  >  ")
         cmds.columnLayout(adj=True, p=rowLayout)
-        cmds.text(l="Replace", w=s.colWidth, h=s.rowHeight)
-        cmds.textField(w=s.colWidth, h=s.rowHeight)
-        cmds.rowLayout(nc=2, adj=1, p=frameLay)
-        cmds.checkBox(l="Use Regex", h=s.rowHeight)
-        cmds.button(l="Replace!", h=s.rowHeight)
+        cmds.text(l=s.i18n["characterRetarget.replace"], w=s.colWidth, h=s.rowHeight)
+        cmds.textFieldGrp(
+            adj=1,
+            w=s.colWidth,
+            h=s.rowHeight,
+            tcc=lambda x: s.updateValue("replace", x))
+        cmds.rowLayout(nc=2, adj=2, p=frameLay)
+        cmds.checkBox(
+            l=s.i18n["characterRetarget.regex"],
+            h=s.rowHeight,
+            cc=lambda x: s.updateValue("regex", x))
+        cmds.button(
+            l=s.i18n["characterRetarget.replace"],
+            h=s.rowHeight,
+            c=s.strReplace)
         col2 = cmds.frameLayout(cll=True, l="Replace individually", p=mainLayout)
         cmds.rowLayout(nc=3, adj=2)
         cmds.text(l=i18n["characterRetarget.from"], w=s.colWidth)
@@ -61,6 +79,13 @@ class CharacterRetarget(object):
             for c in ch:
                 try: cmds.deleteUI(c)
                 except RuntimeError: pass
+
+    def updateValue(s, name, val):
+        s.values[name] = val
+
+    def strReplace(s, *dump):
+        print s.values
+        pass
 
     def refresh(s, *dump): # Build out GUI
         # Clear GUI
