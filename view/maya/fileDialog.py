@@ -9,10 +9,10 @@ class FileDialog(object):
         f = cmds.fileDialog2(
             dir=cmds.workspace(q=True, rd=True),
             caption=s.i18n["filedialog.openDir"],
-            fileMode=3,
+            fileMode=2,#3,
             okCaption=s.i18n["filedialog.openDir"],
             cancelCaption=s.i18n["cancel"],
-            fileFilter="Clips File (*.clips)"
+            # fileFilter="Clips File (*.clips)"
         )
         return f[0] if f else None
     def load(s):

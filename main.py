@@ -39,7 +39,7 @@ class Main(object):
 
     def sendFiles(s, path=None):
         """
-        Given user input path, list character files
+        Given user input path, list character files in a dir.
         """
         if not path:
             path = s.view.fileDialog(s.i18n).openDir()

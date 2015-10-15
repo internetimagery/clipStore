@@ -20,7 +20,7 @@ class CharacterRetarget(object):
         winName = "CharacterEditWin"
         if cmds.window(winName, ex=True): cmds.deleteUI(winName)
         s.window = cmds.window(s=False, t="%s :: %s" % (s.i18n["characterRetarget.title"], name), rtf=True)
-        cmds.columnLayout(adj=True)
+        mainLayout = cmds.columnLayout(adj=True)
         # Title
         cmds.text(l="<h1>%s</h1>" % name)
         # Top button
@@ -28,9 +28,22 @@ class CharacterRetarget(object):
             l=s.i18n["characterRetarget.return"],
             image="goToBindPose.png",
             style="iconAndTextHorizontal",
-            c=lambda: warn.run(requestEdit, s.char, lambda: None)
+            c=lambda: (warn.run(requestEdit, s.char, lambda: None), cmds.deleteUI(s.window))
         )
-        cmds.separator()
+        frameLay = cmds.frameLayout(cll=True, l="Replace in bulk", p=mainLayout)
+        rowLayout = cmds.rowLayout(nc=3, adj=2)
+        cmds.columnLayout(adj=True, p=rowLayout)
+        cmds.text(l="Search", w=s.colWidth, h=s.rowHeight)
+        cmds.textField(w=s.colWidth, h=s.rowHeight)
+        cmds.columnLayout(adj=True, p=rowLayout)
+        cmds.text(l="  >  ")
+        cmds.columnLayout(adj=True, p=rowLayout)
+        cmds.text(l="Replace", w=s.colWidth, h=s.rowHeight)
+        cmds.textField(w=s.colWidth, h=s.rowHeight)
+        cmds.rowLayout(nc=2, adj=1, p=frameLay)
+        cmds.checkBox(l="Use Regex", h=s.rowHeight)
+        cmds.button(l="Replace!", h=s.rowHeight)
+        col2 = cmds.frameLayout(cll=True, l="Replace individually", p=mainLayout)
         cmds.rowLayout(nc=3, adj=2)
         cmds.text(l=i18n["characterRetarget.from"], w=s.colWidth)
         cmds.text(l="  >  ", h=s.rowHeight)
