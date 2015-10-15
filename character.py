@@ -3,9 +3,10 @@
 # http://internetimagery.com
 
 import reference
-import saveFile
+import tempfile
 import os.path
 import getpass
+import archive
 import shutil
 import time
 import uuid
@@ -25,19 +26,15 @@ import os
 #               medium.thumb
 #               large.thumb
 
-def UpdateData(filename, dataOld, func):
-    """
-    Update data given existing file
-    """
-    try:
-        with open(filename) as f:
-            try:
-                dataNew = json.load(f)
-                dataOld = func(dataOld, dataNew)
-            except (ValueError, IndexError):
-                print "Failed to update data %s." % filename
-    except IOError: pass
-    return dataOld
+
+class Temp_Path(str):
+    def __del__(s):
+        if os.path.isfile(s):
+            print "Cleaning up", s
+            os.remove(s)
+    def __getattribute__(s, k):
+        raise AttributeError, "\"Temp_Path\" cannot be modified with \"%s\"" % k
+
 
 class Clip(object):
     """
@@ -85,12 +82,13 @@ class Clip(object):
         with open(os.path.join(root, "clip.json"), "w") as f:
             json.dump(s.clip, f, indent=4)
 
+
 class Character(object):
     """
-    Character. Contains many clips
+    Character. Contains data for clips.
     """
     def __init__(s, path, software):
-        s.saveFile = saveFile.SaveFile(path) # Path to savefile
+        s.archive = archive.Archive(path)
         s.metadata = {
             "name"        : os.path.basename(os.path.splitext(path)[0]),
             "createdOn"   : time.time(),
@@ -99,78 +97,72 @@ class Character(object):
             "modifiedBy"  : getpass.getuser(),
             "software"    : software
             }
-        s.ref = reference.Reference() # Reference object
-        s.data = {} # Storage
-        s.clips = [] # List of clips
-        # Load our Data
-        with s.saveFile as sf:
-            # Load Metadata
-            metaFile = os.path.join(sf, "metadata.json")
-            s.metadata = UpdateData(metaFile, s.metadata, lambda x, y: dict(x, **y))
-            # Load ID References
-            refFile = os.path.join(sf, "reference.json")
-            s.ref = UpdateData(refFile, s.ref, lambda x, y: reference.Reference(y))
-            # Load Data
-            dataFile = os.path.join(sf, "data.json")
-            s.data = UpdateData(dataFile, s.data, lambda x, y: dict(x, **y))
-            # Load clips
-            clipsFile = os.path.join(sf, "clips")
-            if os.path.isdir(clipsFile):
-                clips = os.listdir(clipsFile)
-                if clips: # We have some existing clips to load
-                    for ID in clips:
-                        try:
-                            s.clips.append(Clip(ID, clipsFile))
-                        except IOError:
-                            print "Failed to load clip %s." % clip
+        with s.archive:
+            s.metadata = dict(s.metadata, **s.archive.get("metadata.json", {})) # Metadata
+            s.ref = reference.Reference(s.archive.get("reference.json", {})) # Reference file
+            s.data = s.archive.get("data.json", {}) # Storage
+            s.clips = [] # Clips
+
+
+            # # Load clips
+            # clipsFile = os.path.join(sf, "clips")
+            # if os.path.isdir(clipsFile):
+            #     clips = os.listdir(clipsFile)
+            #     if clips: # We have some existing clips to load
+            #         for ID in clips:
+            #             try:
+            #                 s.clips.append(Clip(ID, clipsFile))
+            #             except IOError:
+            #                 print "Failed to load clip %s." % clip
+
     def save(s):
         """
-        Store data in save file
+        Save data
         """
-        with s.saveFile as sf:
-            # Save Metadata
-            s.metadata["modifiedOn"] = time.time()
-            s.metadata["modifiedBy"] = getpass.getuser()
-            metaFile = os.path.join(sf, "metadata.json")
-            with open(metaFile, "w") as f:
-                json.dump(s.metadata, f, indent=4)
-            # Save Reference
-            refFile = os.path.join(sf, "reference.json")
-            with open(refFile, "w") as f:
-                json.dump(s.ref, f, cls=reference.ReferenceEncode, indent=4)
-            # Save Data
-            dataFile = os.path.join(sf, "data.json")
-            with open(dataFile, "w") as f:
-                json.dump(s.data, f, indent=4)
-            # Save Clips
-            clipsFile = os.path.join(sf, "clips")
-            if not os.path.isdir(clipsFile): os.mkdir(clipsFile)
-            for clip in s.clips:
-                clip._save(clipsFile)
+        with s.archive:
+            s.archive["metadata.json"] = json.dumps(s.metadata, indent=4)
+            s.archive["reference.json"] = json.dumps(s.ref, indent=4, cls=reference.ReferenceEncode)
+            s.archive["data.json"] = json.dumps(s.data, indent=4)
+            # CLIPS STUFF
+
+            #
+            # # Save Clips
+            # clipsFile = os.path.join(sf, "clips")
+            # if not os.path.isdir(clipsFile): os.mkdir(clipsFile)
+            # for clip in s.clips:
+            #     clip._save(clipsFile)
+
     def createClip(s):
         """
         Create a new clip.
         """
-        c = Clip(uuid.uuid4().hex) # Create a new clip
+        c = Clip(uuid.uuid4().hex) # Create a new clip ID
         s.clips.append(c)
         return c
+
     def removeClip(s, clip):
         """
         Remove clip
         """
         if clip in s.clips:
             ID = clip.ID
-            with s.saveFile as sf:
-                path = os.path.join(sf, "clips", ID)
-                if os.path.isdir(path):
-                    print "Removing Clip..."
-                    shutil.rmtree(path)
-                    s.clips.remove(clip)
+            with s.archive:
+                for k in s.archive.keys():
+                    if ID in k: del s.archive[k]
         else:
             raise RuntimeError, "Clip not found..."
+
     def cache(s, path):
         """
         Wrapper for savefile extract
         Pull out requested file into temporary file to work with.
         """
-        return s.saveFile.extract(path)
+        ext = os.path.splitext(path)[1]
+        data = s.archive[path]
+        with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
+            tmp.write(data)
+        return Temp_Path(tmp.name)
+
+
+root = os.path.realpath(os.path.join(os.path.dirname(__file__), "test.zip"))
+c = Character(root, "maya")
