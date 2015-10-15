@@ -94,9 +94,10 @@ class CharacterRetarget(object):
                 if len(set(newData.values())) == len(newData):
                     if s.prompt(newData):
                         if len(set(newData.values())) == len(newData):
-                            for old, new in old, new in newData.items():
+                            for old, new in newData.items():
                                 print "Retargeting %s to %s" % (old, new)
                                 s.sendRetarget(s.char, old, new)
+                            s.refresh()
                 else:
                     raise RuntimeError, "Replacement results in duplicate names."
             else:
