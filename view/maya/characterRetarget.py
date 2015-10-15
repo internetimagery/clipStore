@@ -60,7 +60,7 @@ class CharacterRetarget(object):
         cmds.button(
             l=s.i18n["characterRetarget.replace"],
             h=s.rowHeight,
-            c=s.strReplace)
+            c=lambda x: warn.run(s.strReplace))
         col2 = cmds.frameLayout(cll=True, l="Replace individually", p=mainLayout)
         cmds.rowLayout(nc=3, adj=2)
         cmds.text(l=i18n["characterRetarget.from"], w=s.colWidth)
@@ -83,9 +83,24 @@ class CharacterRetarget(object):
     def updateValue(s, name, val):
         s.values[name] = val
 
-    def strReplace(s, *dump):
-        print s.values
-        pass
+    def strReplace(s):
+        search = s.values["search"].strip()
+        replace = s.values["replace"].strip()
+        if search: # Check we have anything to actually search for
+            if not s.values["regex"]: # Using normal search?
+                search = fnmatch.translate(search)
+            newData = dict((a, re.sub(search, replace, a)) for a in s.allItems if re.sub(search, replace, a) != a)
+            if newData:
+                if len(set(newData.values())) == len(newData):
+                    if s.prompt(newData):
+                        if len(set(newData.values())) == len(newData):
+                            for old, new in old, new in newData.items():
+                                print "Retargeting %s to %s" % (old, new)
+                                s.sendRetarget(s.char, old, new)
+                else:
+                    raise RuntimeError, "Replacement results in duplicate names."
+            else:
+                raise RuntimeError, "No changes will be made."
 
     def refresh(s, *dump): # Build out GUI
         # Clear GUI
@@ -194,3 +209,23 @@ class CharacterRetarget(object):
     def save(s):
         with warn:
             s.char.save()
+
+    def prompt(s, info):
+        def openWindow():
+            p = cmds.setParent(q=True)
+            main = cmds.columnLayout(adj=True, p=p)
+            cmds.text(h=30, l=s.i18n["characterRetarget.replaceDialog"], p=main)
+            cmds.scrollLayout(cr=True, bgc=[0.2,0.2,0.2], h=500, p=main)
+            row = cmds.rowLayout(nc=3, adj=2)
+            col1 = cmds.columnLayout(adj=True, p=row)
+            col2 = cmds.columnLayout(adj=True, p=row)
+            col3 = cmds.columnLayout(adj=True, p=row)
+            for before, after in info.items():
+                cmds.text(l=before, p=col1)
+                cmds.text(l=" => ", p=col2)
+                cmds.text(l=after, p=col3)
+            cmds.rowLayout(nc=3, adj=1, p=main)
+            cmds.separator()
+            cmds.button(l=s.i18n["yes"].center(30), c="cmds.layoutDialog(dismiss=\"yes\")")
+            cmds.button(l=s.i18n["cancel"].center(30), c="cmds.layoutDialog(dismiss=\"cancel\")")
+        return True if cmds.layoutDialog(ui=openWindow, t=s.i18n["characterRetarget.replaceDialog"]) == "yes" else False

@@ -61,5 +61,5 @@ En = {
     "characterRetarget.search"          : "Search",
     "characterRetarget.replace"         : "Replace",
     "characterRetarget.regex"           : "Use Regex",
-    # "characterRetarget.search"          : "Search",
+    "characterRetarget.replaceDialog"   : "These changes will be made...",
 }
