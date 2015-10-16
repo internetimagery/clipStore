@@ -53,9 +53,9 @@ class Archive(collections.MutableMapping):
                     with s:
                         for k, p in paths.items():
                             if k in dirty:
-                                with open(p, "w") as f:
-                                    f.write(s.data[k])
-                            s.z.write(p, k)
+                                s.z.writestr(k, s.data[k])
+                            else:
+                                s.z.write(p, k)
                         s.data = dict((a, str) for a in s.z.namelist())
                 finally:
                     shutil.rmtree(tmp)

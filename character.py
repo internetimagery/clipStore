@@ -85,7 +85,11 @@ class Clip(object):
     def __init__(s, ID):
         s.ID = ID # Location of the clip in savefile
         s.data = {} # { Obj , { Attribute, [ value, value, ... ] } }
-        s.metadata = Metadata()
+        s.thumbs = [] # Store thumbnails
+        s.metadata = {
+            "createdOn" : time.time(),
+            "createdBy" : getpass.getuser()
+            }
 
 class Character(object):
     """
@@ -94,9 +98,12 @@ class Character(object):
     def __init__(s, path, software):
         new = True if os.path.isfile(path) else False
         s.archive = archive.Archive(path)
-        s.metadata = Metadata()
-        s.metadata["name"] = os.path.basename(os.path.splitext(path)[0]),
-        s.metadata["software"] = software
+        s.metadata = {
+            "createdOn" : time.time(),
+            "createdBy" : getpass.getuser(),
+            "name"      : os.path.basename(os.path.splitext(path)[0]),
+            "software"  : software
+            }
 
         with s.archive:
             s.metadata = Dirty(dict(s.metadata, **decode(s.archive.get("metadata.json", "{}")))) # Metadata
@@ -114,11 +121,10 @@ class Character(object):
                     c = Clip(ID)
                     c.metadata = dict(c.metadata, **decode(s.archive.get("clips/%s/metadata.json" % ID, "{}")))
                     c.data = decode(s.archive.get("clips/%s/data.json", "{}"))
-                    thumbs = sorted([a for a, b in tree.items() if b[0] == "clips" and b[1] == c and b[2] == "thumbs"])
-                    s.thumbs = []
+                    thumbs = sorted([a for a, b in tree.items() if b[0] == "clips" and b[1] == ID and b[2] == "thumbs"])
                     if thumbs:
                         for th in thumbs:
-                            s.thumbs.append(s.cache(th))
+                            c.thumbs.append(s.cache(th))
                     s.clips.add(c)
 
     def save(s):
@@ -135,6 +141,8 @@ class Character(object):
             diff2 = set(a.ID for a in s.clips)
             new_ = diff2 - diff1 # New clips
             del_ = diff1 - diff2 # Removed clips
+            print "new", new_
+            print "del", del_
             if s.clips:
                 for c in s.clips:
                     ID = c.ID
@@ -144,11 +152,13 @@ class Character(object):
                         if c.thumbs:
                             for i, th in enumerate(c.thumbs):
                                 with open(th, "rb") as f:
-                                    s.archive["clips/%s/thumbs/%s%s" % (ID, i, os.path.splitext(str(th)[0]))] = f.read()
+                                    s.archive["clips/%s/thumbs/%s%s" % (ID, i, os.path.splitext(str(th))[1])] = f.read()
             if del_:
                 for k, v in tree.items():
-                    if v[1] in del_:
-                        del s.archive[k]
+                    try:
+                        if v[1] in del_:
+                            del s.archive[k]
+                    except IndexError: pass
 
     def createClip(s, name, data, thumbs):
         """
@@ -176,6 +186,12 @@ class Character(object):
         return Path(tmp.name)
 
 
-root = os.path.realpath(os.path.join(os.path.dirname(__file__), "test.zip"))
-c = Character(root, "maya")
+root = os.path.realpath("C:/Users/maczone/Desktop/test")
+f = os.path.join(root, "test2.zip")
+i = os.path.join(root, "guy.jpg")
+c = Character(f, "maya")
+
+# for clip in c.clips:
+#     print clip, clip.thumbs
+# ch = c.createClip("clip one", {"data":"stuff"}, [i,i])
 c.save()
