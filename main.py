@@ -124,7 +124,7 @@ class Main(object):
             # Convert entry to ID's
             new = s.flipData(char, new)
             # Add entry to existing data
-            char.data = dict(char.data, **new)
+            char.data.update(**new)
         else: raise RuntimeError, "Nothing selected."
 
     def characterRemoveObject(s, char, obj):
@@ -168,18 +168,21 @@ class Main(object):
         """
         Load the clip edit window. If no existing clip is specified. Create a new one.
         """
-        if not clip: # No clip specified? Make one!
-            clip = char.createClip()
+        if char.data:
+            if not clip: # No clip specified? Make one!
+                clip = char.createClip()
 
-        s.view.clipEdit(
-            s.i18n,
-            char,
-            clip,
-            s.clipCaptureThumbs,
-            s.characterSendData,
-            s.clipCaptureData,
-            refresh
-            )
+            s.view.clipEdit(
+                s.i18n,
+                char,
+                clip,
+                s.clipCaptureThumbs,
+                s.characterSendData,
+                s.clipCaptureData,
+                refresh
+                )
+        else:
+            raise RuntimeError, "There is no stored selection to make clips from."
 
     def clipCaptureThumbs(s, char, clip, camera, frameRange):
         """
@@ -199,9 +202,9 @@ class Main(object):
                 s.model.thumb.capture(thumbSize, camera, frameRange[1])
                 ]
         else: # Long clip
-            step = int(frameNum / 5) # Roughly every 5 frames.
+            step = int(frameNum / stepSize) # Roughly every 5 frames.
             inc = float(frameNum) / step
-            thumbs = [s.model.thumb.capture(thumbSize, camera, a * inc + frameRange[0])) for a in range(0, step+1)]
+            thumbs = [s.model.thumb.capture(thumbSize, camera, a * inc + frameRange[0]) for a in range(0, step+1)]
         clip.thumbs = thumbs
 
     def clipCaptureData(s, char, clip, frames):
@@ -237,3 +240,6 @@ class Main(object):
         elif ignore:
             data =dict( (e, f) for e, f in dict( (a, dict( (c, d) for c, d in b.items() if a not in selection or c not in selection[a] ) ) for a, b in data.items() ).items() if f)
         s.model.clip.replay(data) # FINALLY after all this craziness. Lets pose out our animation!
+
+
+# TODO check if Character is empty and prevent new clip creation

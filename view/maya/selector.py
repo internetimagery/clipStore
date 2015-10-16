@@ -15,7 +15,7 @@ class Selector(object):
             path = os.path.expanduser("~")
         s.files = {}
 
-        s.winName = "PrimaryWin"
+        s.winName = "SelectorWin"
         if cmds.window(s.winName, ex=True):
             cmds.deleteUI(s.winName)
         s.window = cmds.window(s.winName, rtf=True, t=s.i18n["selector.title"])

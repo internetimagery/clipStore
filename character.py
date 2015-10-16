@@ -67,17 +67,6 @@ class Encoder(json.JSONEncoder):
 def encode(*args, **kwargs): return json.dumps(*args, indent=4, cls=Encoder, **kwargs)
 def decode(*args, **kwargs): return json.loads(*args, **kwargs)
 
-def Metadata(data=None):
-    if not data:
-        data = {
-            "createdOn"     : time.time(),
-            "createdBy"     : getpass.getuser()
-            }
-    return dict(data, **{
-        "modifiedOn"    : time.time(),
-        "modifiedBy"    : getpass.getuser()
-    })
-
 class Clip(object):
     """
     Single Clip
@@ -119,7 +108,7 @@ class Character(object):
             if clipIDs:
                 for ID in clipIDs:
                     c = Clip(ID)
-                    c.metadata = dict(c.metadata, **decode(s.archive.get("clips/%s/metadata.json" % ID, "{}")))
+                    c.metadata = Dirty(dict(c.metadata, **decode(s.archive.get("clips/%s/metadata.json" % ID, "{}"))))
                     c.data = decode(s.archive.get("clips/%s/data.json", "{}"))
                     thumbs = sorted([a for a, b in tree.items() if b[0] == "clips" and b[1] == ID and b[2] == "thumbs"])
                     if thumbs:
@@ -132,7 +121,7 @@ class Character(object):
         Save data
         """
         with s.archive:
-            if s.metadata.dirty: s.archive["metadata.json"] = encode(Metadata(s.metadata))
+            if s.metadata.dirty: s.archive["metadata.json"] = encode(s.metadata)
             if s.ref.dirty: s.archive["reference.json"] = encode(s.ref)
             if s.data.dirty: s.archive["data.json"] = encode(s.data)
             # CLIPS STUFF
@@ -141,13 +130,11 @@ class Character(object):
             diff2 = set(a.ID for a in s.clips)
             new_ = diff2 - diff1 # New clips
             del_ = diff1 - diff2 # Removed clips
-            print "new", new_
-            print "del", del_
             if s.clips:
                 for c in s.clips:
                     ID = c.ID
+                    if c.metadata.dirty or ID in new_: s.archive["clips/%s/metadata.json" % ID] = encode(c.metadata)
                     if ID in new_: # New clip
-                        s.archive["clips/%s/metadata.json" % ID] = encode(Metadata(c.metadata))
                         s.archive["clips/%s/data.json" % ID] = encode(c.data)
                         if c.thumbs:
                             for i, th in enumerate(c.thumbs):

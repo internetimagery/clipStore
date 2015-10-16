@@ -1,16 +1,20 @@
 import os
 import os.path
 
-class Temp_Path(str):
-    _ok = set(["rfind"])
-    def __del__(s):
-        print "Done"
-    def __getattribute__(s, k):
-        raise AttributeError, "\"Temp_Path\" cannot be modified with \"%s\"" % k
+import collections
 
-# Example Usage
-# import tempfile
-# with tempfile.NamedTemporaryFile(delete=False) as f: path = Temp_Path(f.name)
-# print path
-p = Temp_Path("stuff/thing.cone")
-print os.path.splitext(p)
+class Dict(collections.MutableMapping):
+    def __init__(s, *args, **kwargs):
+        s.data = dict(*args, **kwargs)
+    def __getitem__(s, k): return s.data[k]
+    def __setitem__(s, k, v): s.data[k] = v
+    def __iter__(s): return iter(s.data)
+    def __repr__(s): return repr(s.data)
+    def __len__(s): return len(s.data)
+    def __delitem__(s): del s.data[k]
+
+
+d = Dict()
+print d
+d.update({"one":"two"}, three="four")
+print d
