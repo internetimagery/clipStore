@@ -201,8 +201,3 @@ class Character(object):
         with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(path)[1]) as tmp:
             tmp.write(s.archive[path])
         return Path(tmp.name)
-
-path = "C:/Users/maczone/Desktop/test/tryout.clips"
-path = os.path.realpath(path)
-
-c = Character(path, "maya")
