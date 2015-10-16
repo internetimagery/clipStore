@@ -1,6 +1,7 @@
 # Character. Loaded from clips file
 # Created 10/10/15 Jason Dixon
 # http://internetimagery.com
+
 try:
     import cPickle as pickle
 except ImportError:

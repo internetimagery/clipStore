@@ -1,2 +1,3 @@
-# animCopy
-copy animations and poses
+# Clip Store
+
+A pose and animation library for Maya.
