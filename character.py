@@ -32,7 +32,7 @@ import os
 
 class Path(str):
     """
-    Self cleaning path
+    Temporary path
     """
     def __del__(s):
         if os.path.isfile(s):
@@ -41,31 +41,20 @@ class Path(str):
     def __getattribute__(s, k):
         raise AttributeError, "\"Path\" cannot be modified with \"%s\"" % k
 
-def Dirty(func):
-    def wrapper(s, *args, **kwargs):
-        s.dirty = True
-        return func(s, *args, **kwargs)
-    return wrapper
-
-class Dict(collections.MutableMapping):
-    def __init__(s, *args, **kwargs):
-        s.data = dict(*args, **kwargs); s.dirty = False
+class Dirty(collections.MutableMapping):
+    def __init__(s, dictionary):
+        s.data = dictionary
+        s.dirty = False
     def __getitem__(s, k): return s.data[k]
     def __iter__(s): return iter(s.data)
     def __repr__(s): return repr(s.data)
     def __len__(s): return len(s.data)
-    @Dirty
-    def __setitem__(s, k, v): s.data[k] = v
-    @Dirty
-    def __delitem__(s): del s.data[k]
-
-class Ref(reference.Reference):
-    def __init__(s, *args, **kwargs):
-        reference.Reference.__init__(s, *args, **kwargs); s.dirty = False
-    @Dirty
-    def __setitem__(s, k, v): return reference.Reference.__setitem__(s, k, v)
-    @Dirty
-    def __delitem__(s, k): return reference.Reference.__delitem__(s, k)
+    def __setitem__(s, k, v):
+        s.data[k] = v
+        s.dirty = True
+    def __delitem__(s):
+        del s.data[k]
+        s.dirty = True
 
 class Encoder(json.JSONEncoder):
     s._types = [dict, list]
@@ -96,7 +85,7 @@ class Clip(object):
     def __init__(s, ID, new=False):
         s.new = new
         s.ID = ID # Location of the clip in savefile
-        s.metadata = Dict(Metadata())
+        s.metadata = Metadata()
         s.data = {} # { Obj , { Attribute, [ value, value, ... ] } }
         if root: # We want to load this information. Otherwise creating new
             root = os.path.join(root, ID)
@@ -142,9 +131,9 @@ class Character(object):
         s.metadata["software"] = software
 
         with s.archive:
-            s.metadata = Dict(s.metadata, **decode(s.archive.get("metadata.json", {}))) # Metadata
-            s.ref = Ref(decode(s.archive.get("reference.json", {}))) # Reference file
-            s.data = Dict(decode(s.archive.get("data.json", {}))) # Storage
+            s.metadata = dict(s.metadata, **decode(s.archive.get("metadata.json", {}))) # Metadata
+            s.ref = Dirty(reference.Reference(decode(s.archive.get("reference.json", {})))) # Reference file
+            s.data = Dirty(dict(decode(s.archive.get("data.json", {})))) # Storage
             tree = dict((a, a.split("/")) for a in s.archive.keys())
             clipIDs = set(b[1] for a, b in tree.items() if b[0] == "clips" )
             s.clips = set() # Clips
@@ -152,7 +141,7 @@ class Character(object):
                 for ID in clipIDs:
                     c = Clip(ID)
                     c.thumbs = sorted([a, for a, b in tree.items() if b[0] == "clips" and b[1] == c and b[2] == "thumbs"])
-                    c.metadata = Dict(c.metadata, **decode(s.archive.get("clips/%s/metadata.json" % ID, {})))
+                    c.metadata = dict(c.metadata, **decode(s.archive.get("clips/%s/metadata.json" % ID, {})))
                     c.clip = decode(s.archive.get("clips/%s/clip.json" % ID, {}))
 
     def save(s):
@@ -160,7 +149,7 @@ class Character(object):
         Save data
         """
         with s.archive:
-            if s.metadata.dirty or s.new: s.archive["metadata.json"] = encode(s.metadata)
+            s.archive["metadata.json"] = encode(Metadata(s.metadata))
             if s.ref.dirty or s.new: s.archive["reference.json"] = encode(s.ref)
             if s.data.dirty or s.new: s.archive["data.json"] = encode(s.data)
             # CLIPS STUFF
@@ -172,8 +161,8 @@ class Character(object):
             if s.clips:
                 for c in s.clips:
                     ID = c.ID
-                    if c.metadata.dirty or ID in new_: s.archive["clips/%s/metadata.json" % ID] = encode(c.metadata)
                     if ID in new_:
+                        s.archive["clips/%s/metadata.json" % ID] = encode(Metadata(c.metadata))
                         s.archive["clips/%s/clip.json" % ID] = c.clip
                         if c.thumbs:
                             for i, th in enumerate(c.thumbs):
@@ -183,6 +172,7 @@ class Character(object):
                 for k, v in tree.items():
                     if v[1] in del_:
                         del s.archive[k]
+
 
 
 
