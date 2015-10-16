@@ -44,17 +44,30 @@ class Path(str):
 class Dirty(collections.MutableMapping):
     def __init__(s, dictionary):
         s.data = dictionary
-        s.dirty = False
+        s._dirty = False
     def __getitem__(s, k): return s.data[k]
     def __iter__(s): return iter(s.data)
     def __repr__(s): return repr(s.data)
     def __len__(s): return len(s.data)
     def __setitem__(s, k, v):
         s.data[k] = v
-        s.dirty = True
-    def __delitem__(s):
+        print "dirty"
+        s._dirty = True
+    def __delitem__(s, k):
+        print "dirty"
         del s.data[k]
-        s.dirty = True
+        s._dirty = True
+    def dirty():
+        doc = "Track Changes"
+        def fget(s):
+            v = s._dirty
+            s._dirty = False
+            return v
+        def fset(s, v):
+            print "Dirty"
+            s._dirty = v
+        return locals()
+    dirty = property(**dirty())
 
 class Encoder(json.JSONEncoder):
     _types = [dict, list]
@@ -75,17 +88,17 @@ class Clip(object):
         s.ID = ID # Location of the clip in savefile
         s.data = {} # { Obj , { Attribute, [ value, value, ... ] } }
         s.thumbs = [] # Store thumbnails
-        s.metadata = {
+        s.metadata = Dirty({
             "createdOn" : time.time(),
             "createdBy" : getpass.getuser()
-            }
+            })
 
 class Character(object):
     """
     Character. Contains data for clips.
     """
     def __init__(s, path, software):
-        new = True if os.path.isfile(path) else False
+        new = False if os.path.isfile(path) else True
         s.archive = archive.Archive(path)
         s.metadata = {
             "createdOn" : time.time(),
@@ -168,14 +181,3 @@ class Character(object):
         with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(path)[1]) as tmp:
             tmp.write(s.archive[path])
         return Path(tmp.name)
-#
-#
-# root = os.path.realpath("C:/Users/maczone/Desktop/test")
-# f = os.path.join(root, "test2.zip")
-# i = os.path.join(root, "guy.jpg")
-# c = Character(f, "maya")
-#
-# # for clip in c.clips:
-# #     print clip, clip.thumbs
-# # ch = c.createClip("clip one", {"data":"stuff"}, [i,i])
-# c.save()

@@ -41,6 +41,7 @@ class Archive(collections.MutableMapping):
                 try:
                     dirty = set(a for a, b in s.data.items() if b is not str)
                     s.mode = "a"
+                    print "WRITING", dirty
                     with s:
                         n = set(s.z.namelist())
                         if dirty - n and not dirty & n:

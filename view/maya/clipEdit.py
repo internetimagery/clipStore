@@ -27,7 +27,7 @@ class ClipEdit(object):
         if missing:
             ans = cmds.confirmDialog(
                 t=s.i18n["clipEdit.missing"],
-                m=s.i18n["clipEdit.missingDesc"].replace("[OBJECTS]", "\n* ".join(missing)),
+                m=s.i18n["clipEdit.missingDesc"].replace("[OBJECTS]", "\n ".join(missing)),
                 button=[s.i18n["yes"], s.i18n["no"]],
                 defaultButton=s.i18n["yes"],
                 cancelButton=s.i18n["no"],

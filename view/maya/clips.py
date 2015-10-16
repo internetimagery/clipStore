@@ -15,7 +15,7 @@ class Clips(object):
         s.requestClipEdit = requestClipEdit # We're asking to edit the clip
         s.sendRunClip = sendRunClip # User wants to place the clip
         s.clips = [] # Init clips!
-        name = s.char.metadata["name"].title()
+        name = s.char.metadata.get("name", "CLips").title()
 
         if not char.data: # Does the character contain nothing?
             with warn:
@@ -68,6 +68,7 @@ class Clips(object):
         cmds.scriptJob(uid=[s.window, s.cleanup], ro=True)
         s.refresh()
     def cleanup(s):
+        s.char.save()
         print "Closed"
     def sizeClips(s, val):
         cmds.gridLayout(s.wrapper, e=True, cwh=[val,val+20])
@@ -105,7 +106,7 @@ class Clip(object):
         s.i18n = i18n
         s.char = char
         s.clip = clip
-        s.name = clip.metadata["name"].title()
+        s.name = clip.metadata.get("name", "CLIP").title()
         length = clip.metadata.get("length", None)
         if length is not None:
             s.name = "%s - %s" % (s.name, length)
@@ -161,7 +162,6 @@ class Clip(object):
             text = text.strip().title() if text else None
             if text:
                 clip.metadata["name"] = text
-                char.save()
                 cmds.text(s.label, e=True, l=text)
     def next(s):
         s.index = s.index - 1 if 0 <= s.index else len(s.thumbs) - 1

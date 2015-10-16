@@ -4,7 +4,6 @@
 
 from collections import defaultdict as dd
 import maya.cmds as cmds
-import fnmatch
 import warn
 import re
 
@@ -87,8 +86,10 @@ class CharacterRetarget(object):
         search = s.values["search"].strip()
         replace = s.values["replace"].strip()
         if search: # Check we have anything to actually search for
-            if not s.values["regex"]: # Using normal search?
-                search = fnmatch.translate(search)
+            if s.values["regx"]: # REGEX!
+                newData = dict(b for b in ((a, re.sub(search, replace, a)) for a in s.allItems) if b[0] != b[1])
+            else: # normal search!
+                newData = dict(b for b in ((a, a.replace(search, replace)) for a in s.allItems) if b[0] != b[1])
             newData = dict((a, re.sub(search, replace, a)) for a in s.allItems if re.sub(search, replace, a) != a)
             if newData:
                 if len(set(newData.values())) == len(newData):

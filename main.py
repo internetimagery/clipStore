@@ -152,7 +152,9 @@ class Main(object):
             if not obj or o == obj:
                 for at in attrs:
                     if at == attr:
+                        print "changing attr", obj, at
                         char.data[o][at] = enable
+                        char.data.dirty = True
 
     def characterEditReference(s, char, old, new):
         """
@@ -217,7 +219,7 @@ class Main(object):
         if len(frames) == 2:
             named = s.flipData(char, char.data) # Convert to real names
             capture = s.model.clip.capture(named, frames) # Capture all data
-            clip.data = s.flipData(char, capture) # Revert data to ID's
+            clip.data.update(**s.flipData(char, capture)) # Revert data to ID's
         else:
             raise RuntimeError, "Invalid range given."
 
@@ -240,6 +242,3 @@ class Main(object):
         elif ignore:
             data =dict( (e, f) for e, f in dict( (a, dict( (c, d) for c, d in b.items() if a not in selection or c not in selection[a] ) ) for a, b in data.items() ).items() if f)
         s.model.clip.replay(data) # FINALLY after all this craziness. Lets pose out our animation!
-
-
-# TODO check if Character is empty and prevent new clip creation
