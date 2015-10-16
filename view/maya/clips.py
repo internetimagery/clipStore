@@ -162,6 +162,9 @@ class Clip(object):
             text = text.strip().title() if text else None
             if text:
                 clip.metadata["name"] = text
+                length = clip.metadata.get("length", None)
+                if length is not None:
+                    text = "%s - %s" % (text, length)
                 cmds.text(s.label, e=True, l=text)
     def next(s):
         s.index = s.index - 1 if 0 <= s.index else len(s.thumbs) - 1

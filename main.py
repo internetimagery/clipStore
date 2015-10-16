@@ -152,9 +152,7 @@ class Main(object):
             if not obj or o == obj:
                 for at in attrs:
                     if at == attr:
-                        print "changing attr", obj, at
                         char.data[o][at] = enable
-                        char.data.dirty = True
 
     def characterEditReference(s, char, old, new):
         """

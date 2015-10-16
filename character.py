@@ -163,22 +163,22 @@ class Character(object):
             diff2 = set(a for a in s.clips)
             new_ = diff2 - diff1 # New clips
             del_ = diff1 - diff2 # Removed clips
-            print "Has clips changed?", s.clips.diff
-            if s.clips:
+            changes = s.clips.diff
+            if changes:
                 for ID, c in s.clips.items():
-                    if c.metadata.diff or ID in new_: s.archive["clips/%s/metadata.json" % ID] = encode(c.metadata)
-                    if ID in new_: # New clip
+                    if c.metadata.diff or ID in changes[0]: s.archive["clips/%s/metadata.json" % ID] = encode(c.metadata)
+                    if ID in changes[0]: # New clip
                         s.archive["clips/%s/data.json" % ID] = encode(c.data)
                         if c.thumbs:
                             for i, th in enumerate(c.thumbs):
                                 with open(th, "rb") as f:
                                     s.archive["clips/%s/thumbs/%s%s" % (ID, i, os.path.splitext(str(th))[1])] = f.read()
-            if del_:
-                for k, v in tree.items():
-                    try:
-                        if v[1] in del_:
-                            del s.archive[k]
-                    except IndexError: pass
+                if changes[2]:
+                    for k, v in tree.items():
+                        try:
+                            if v[1] in changes[2]:
+                                del s.archive[k]
+                        except IndexError: pass
 
     def createClip(s):
         """
