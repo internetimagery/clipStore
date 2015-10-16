@@ -1,9 +1,13 @@
 # Character. Loaded from clips file
 # Created 10/10/15 Jason Dixon
 # http://internetimagery.com
-
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 import collections
 import reference
+import StringIO
 import tempfile
 import inspect
 import os.path
@@ -39,32 +43,50 @@ class Path(str):
             print "Cleaning up", s
             os.remove(s)
     def __getattribute__(s, k):
+        if k[0] == "_": return str.__getattribute__(s, k)
         raise AttributeError, "\"Path\" cannot be modified with \"%s\"" % k
 
-class Dirty(collections.MutableMapping):
-    def __init__(s, dictionary):
-        s.data = dictionary
-        s._dirty = False
-    def __getitem__(s, k): return s.data[k]
-    def __iter__(s): return iter(s.data)
-    def __repr__(s): return repr(s.data)
-    def __len__(s): return len(s.data)
-    def __setitem__(s, k, v):
-        s.data[k] = v
-        s._dirty = True
-    def __delitem__(s, k):
-        del s.data[k]
-        s._dirty = True
-    def dirty():
-        doc = "Track Changes"
+class Dict(collections.MutableMapping):
+    """
+    Wrapper to track changes. Changes = [New, Changed, Removed]
+    """
+    def __init__(s, dictionary=None):
+        s._data = dictionary if dictionary else {}
+        s._diff = {}; s.diff
+    def __getitem__(s, k): return s._data[k]
+    def __setitem__(s, k, v): s._data[k] = v
+    def __iter__(s): return iter(s._data)
+    def __repr__(s): return repr(s._data)
+    def __len__(s): return len(s._data)
+    def __delitem__(s, k): del s._data[k]
+    def _hash(s, o):
+        f = StringIO.StringIO()
+        p = pickle.Pickler(f, -1)
+        p.persistent_id = s._filter
+        p.dump(o); f.seek(0)
+        return f.read()
+    def _filter(s, o):
+        try:
+            return pickle.dumps(o)
+        except:
+            return str(o.__class__)
+    def diff():
         def fget(s):
-            v = s._dirty
-            s._dirty = False
-            return v
+            diff1 = set([a for a in s._data]) # Current keys
+            diff2 = set([a for a in s._diff]) # Old keys
+            diff3 = dict((a, s._hash(b)) for a, b in s._data.items()) # Changes
+            new = diff1 - diff2 # New keys
+            rem = diff2 - diff1 # Removed keys
+            chg = set(a for a, b in diff3.items() if a in s._diff and a not in new and a not in rem and b != s._diff[a])
+            s._diff = diff3
+            return [new, chg, rem] if new or chg or rem else None
         def fset(s, v):
-            s._dirty = v
+            if v:
+                s._diff = {}
+            else:
+                s.diff
         return locals()
-    dirty = property(**dirty())
+    diff = property(**diff())
 
 class Encoder(json.JSONEncoder):
     _types = [dict, list]
@@ -85,7 +107,7 @@ class Clip(object):
         s.ID = ID # Location of the clip in savefile
         s.data = {} # { Obj , { Attribute, [ value, value, ... ] } }
         s.thumbs = [] # Store thumbnails
-        s.metadata = Dirty({
+        s.metadata = Dict({
             "createdOn" : time.time(),
             "createdBy" : getpass.getuser()
             })
@@ -105,45 +127,46 @@ class Character(object):
             }
 
         with s.archive:
-            s.metadata = Dirty(dict(s.metadata, **decode(s.archive.get("metadata.json", "{}")))) # Metadata
-            s.ref = Dirty(reference.Reference(decode(s.archive.get("reference.json", "{}")))) # Reference file
-            s.data = Dirty(dict(decode(s.archive.get("data.json", "{}")))) # Storage
+            s.metadata = Dict(dict(s.metadata, **decode(s.archive.get("metadata.json", "{}")))) # Metadata
+            s.ref = Dict(reference.Reference(decode(s.archive.get("reference.json", "{}")))) # Reference file
+            s.data = Dict(dict(decode(s.archive.get("data.json", "{}")))) # Storage
             if new:
-                s.metadata.dirty = True
-                s.data.dirty = True
-                s.ref.dirty = True
+                s.metadata.diff = True
+                s.data.diff = True
+                s.ref.diff = True
             tree = dict((a, a.split("/")) for a in s.archive.keys())
             clipIDs = set(b[1] for a, b in tree.items() if b[0] == "clips" )
-            s.clips = set() # Clips
+            s.clips = Dict()
             if clipIDs:
                 for ID in clipIDs:
                     c = Clip(ID)
-                    c.metadata = Dirty(dict(c.metadata, **decode(s.archive.get("clips/%s/metadata.json" % ID, "{}"))))
+                    c.metadata = Dict(dict(c.metadata, **decode(s.archive.get("clips/%s/metadata.json" % ID, "{}"))))
                     c.data = decode(s.archive.get("clips/%s/data.json", "{}"))
                     thumbs = sorted([a for a, b in tree.items() if b[0] == "clips" and b[1] == ID and b[2] == "thumbs"])
                     if thumbs:
                         for th in thumbs:
                             c.thumbs.append(s.cache(th))
-                    s.clips.add(c)
+                    s.clips[ID] = c
+            s.clips.diff
 
     def save(s):
         """
         Save data
         """
         with s.archive:
-            if s.metadata.dirty: s.archive["metadata.json"] = encode(s.metadata)
-            if s.ref.dirty: s.archive["reference.json"] = encode(s.ref)
-            if s.data.dirty: s.archive["data.json"] = encode(s.data)
+            if s.metadata.diff: s.archive["metadata.json"] = encode(s.metadata)
+            if s.ref.diff: s.archive["reference.json"] = encode(s.ref)
+            if s.data.diff: s.archive["data.json"] = encode(s.data)
             # CLIPS STUFF
             tree = dict((a, a.split("/")) for a in s.archive.keys())
             diff1 = set(b[1] for b in tree.values() if b[0] == "clips")
-            diff2 = set(a.ID for a in s.clips)
+            diff2 = set(a for a in s.clips)
             new_ = diff2 - diff1 # New clips
             del_ = diff1 - diff2 # Removed clips
+            print "Has clips changed?", s.clips.diff
             if s.clips:
-                for c in s.clips:
-                    ID = c.ID
-                    if c.metadata.dirty or ID in new_: s.archive["clips/%s/metadata.json" % ID] = encode(c.metadata)
+                for ID, c in s.clips.items():
+                    if c.metadata.diff or ID in new_: s.archive["clips/%s/metadata.json" % ID] = encode(c.metadata)
                     if ID in new_: # New clip
                         s.archive["clips/%s/data.json" % ID] = encode(c.data)
                         if c.thumbs:
@@ -162,14 +185,14 @@ class Character(object):
         Generate a new clip.
         """
         c = Clip(uuid.uuid4().hex) # Create a new clip ID
-        s.clips.add(c)
+        s.clips[c.ID] = c
         return c
 
     def removeClip(s, clip):
         """
         Remove clip
         """
-        s.clips.remove(clip)
+        del s.clips[clip.ID]
 
     def cache(s, path):
         """

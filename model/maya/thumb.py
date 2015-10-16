@@ -13,6 +13,7 @@ class Temp_Path(str):
             os.remove(s)
             print "Cleaned tempfile:", s
     def __getattribute__(s, k):
+        if k[0] == "_": return str.__getattribute__(s, k)
         raise AttributeError, "\"Temp_Path\" cannot be modified with \"%s\"" % k
 
 class Thumb(object):

@@ -83,7 +83,7 @@ class Clips(object):
         try:
             s.clips = [] # GUI clips
             if s.char.clips:
-                for c in sorted(s.char.clips, key=lambda x: x.metadata.get("name", "zzzz")):
+                for c in sorted([b for a, b in s.char.clips.items()], key=lambda x: x.metadata.get("name", "zzzz")):
                     s.clips.append(Clip(
                         s.i18n,
                         s.wrapper,
