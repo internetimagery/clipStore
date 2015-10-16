@@ -24,9 +24,10 @@ import os
 #       clipname/
 #               metadata.json
 #               clip.json
-#               small.thumb
-#               medium.thumb
-#               large.thumb
+#               thumbs/
+#                   1.png
+#                   2.png
+#                   ...
 
 
 class Path(str):
@@ -40,41 +41,31 @@ class Path(str):
     def __getattribute__(s, k):
         raise AttributeError, "\"Path\" cannot be modified with \"%s\"" % k
 
-class Set(collections.MutableSet):
-    """
-    Modification notifying set
-    """
-    def __init__(s, *args, **kwargs):
-        s.data = set(*args, **kwargs)
-        s.dirty = False
-    def __contains__(s, v): return v in s.data
-    def __iter__(s): return iter(s.data)
-    def __repr__(s): return repr(s.data)
-    def __len__(s): return len(s.data)
-    def discard(s, v):
-        s.data.discard(v)
+def Dirty(func):
+    def wrapper(s, *args, **kwargs):
         s.dirty = True
-    def add(s, v):
-        s.dirty = True
-        s.data.add(v)
+        return func(s, *args, **kwargs)
+    return wrapper
 
 class Dict(collections.MutableMapping):
-    """
-    Modification notifying dict
-    """
     def __init__(s, *args, **kwargs):
-        s.data = dict(*args, **kwargs)
-        s.dirty = False
+        s.data = dict(*args, **kwargs); s.dirty = False
     def __getitem__(s, k): return s.data[k]
     def __iter__(s): return iter(s.data)
     def __repr__(s): return repr(s.data)
     def __len__(s): return len(s.data)
-    def __setitem__(s, k, v):
-        s.dirty = True
-        s.data[k] = v
-    def __delitem__(s):
-        s.dirty = True
-        del s.data[k]
+    @Dirty
+    def __setitem__(s, k, v): s.data[k] = v
+    @Dirty
+    def __delitem__(s): del s.data[k]
+
+class Ref(reference.Reference):
+    def __init__(s, *args, **kwargs):
+        reference.Reference.__init__(s, *args, **kwargs); s.dirty = False
+    @Dirty
+    def __setitem__(s, k, v): return reference.Reference.__setitem__(s, k, v)
+    @Dirty
+    def __delitem__(s, k): return reference.Reference.__delitem__(s, k)
 
 class Encoder(json.JSONEncoder):
     s._types = [dict, list]
@@ -87,20 +78,26 @@ class Encoder(json.JSONEncoder):
 def encode(*args, **kwargs): return json.dumps(*args, cls=Encoder, **kwargs)
 def decode(*args, **kwargs): return json.loads(*args, **kwargs)
 
+def Metadata(data=None):
+    if not data:
+        data = {
+            "createdOn"     : time.time(),
+            "createdBy"     : getpass.getuser()
+            }
+    return dict(data, **{
+        "modifiedOn"    : time.time(),
+        "modifiedBy"    : getpass.getuser()
+    }
+
 class Clip(object):
     """
     Single Clip
     """
-    def __init__(s, ID, root=None):
+    def __init__(s, ID, new=False):
+        s.new = new
         s.ID = ID # Location of the clip in savefile
-        s.metadata = {
-            "createdOn"     : time.time(),
-            "createdBy"     : getpass.getuser(),
-            "modifiedOn"    : time.time(),
-            "modifiedBy"    : getpass.getuser(),
-            "thumbs"        : {} # Thumbnails!
-        }
-        s.clip = {} # { Obj , { Attribute, [ value, value ... ] } }
+        s.metadata = Dict(Metadata())
+        s.data = {} # { Obj , { Attribute, [ value, value, ... ] } }
         if root: # We want to load this information. Otherwise creating new
             root = os.path.join(root, ID)
             # Load Metadata
@@ -138,52 +135,56 @@ class Character(object):
     """
     Character. Contains data for clips.
     """
-    def __init__(s, path, software):
+    def __init__(s, path, software, new=False):
         s.archive = archive.Archive(path)
-        s.metadata = {
-            "name"        : os.path.basename(os.path.splitext(path)[0]),
-            "createdOn"   : time.time(),
-            "createdBy"   : getpass.getuser(),
-            "modifiedOn"  : time.time(),
-            "modifiedBy"  : getpass.getuser(),
-            "software"    : software
-            }
+        s.metadata = Metadata()
+        s.metadata["name"] = os.path.basename(os.path.splitext(path)[0]),
+        s.metadata["software"] = software
+
         with s.archive:
             s.metadata = Dict(s.metadata, **decode(s.archive.get("metadata.json", {}))) # Metadata
-            s.ref = reference.Reference(decode(s.archive.get("reference.json", {}))) # Reference file
+            s.ref = Ref(decode(s.archive.get("reference.json", {}))) # Reference file
             s.data = Dict(decode(s.archive.get("data.json", {}))) # Storage
-            directory = dict((a, a.split("/")) for a in s.archive.keys())
-            clipIDs = set(b[1] for a, b in directory.items() if b[0] == "clips" )
-            s.clips = [] # Clips
+            tree = dict((a, a.split("/")) for a in s.archive.keys())
+            clipIDs = set(b[1] for a, b in tree.items() if b[0] == "clips" )
+            s.clips = set() # Clips
             if clipIDs:
-                for c in clipIDs:
-                    clipImg = sorted([a, for a, b in directory.items() if b[1] == c and b[2] == "thumbs"])
-                    print c
-
-
-            # # Load clips
-            # clipsFile = os.path.join(sf, "clips")
-            # if os.path.isdir(clipsFile):
-            #     clips = os.listdir(clipsFile)
-            #     if clips: # We have some existing clips to load
-            #         for ID in clips:
-            #             try:
-            #                 s.clips.append(Clip(ID, clipsFile))
-            #             except IOError:
-            #                 print "Failed to load clip %s." % clip
+                for ID in clipIDs:
+                    c = Clip(ID)
+                    c.thumbs = sorted([a, for a, b in tree.items() if b[0] == "clips" and b[1] == c and b[2] == "thumbs"])
+                    c.metadata = Dict(c.metadata, **decode(s.archive.get("clips/%s/metadata.json" % ID, {})))
+                    c.clip = decode(s.archive.get("clips/%s/clip.json" % ID, {}))
 
     def save(s):
         """
         Save data
         """
         with s.archive:
-            if s.metadata.dirty: s.archive["metadata.json"] = encode(s.metadata)
-            s.archive["reference.json"] = encode(s.ref)
-            if s.data.dirty: s.archive["data.json"] = encode(s.data)
+            if s.metadata.dirty or s.new: s.archive["metadata.json"] = encode(s.metadata)
+            if s.ref.dirty or s.new: s.archive["reference.json"] = encode(s.ref)
+            if s.data.dirty or s.new: s.archive["data.json"] = encode(s.data)
             # CLIPS STUFF
+            tree = dict((a, a.split("/")) for a in s.archive.keys())
+            diff1 = set(b[1] for b in tree.values() if b[0] == "clips")
+            diff2 = set(a.ID for a in s.clips)
+            new_ = diff2 - diff1 # New clips
+            del_ = diff1 - diff2 # Removed clips
             if s.clips:
                 for c in s.clips:
-                    print "save clip"
+                    ID = c.ID
+                    if c.metadata.dirty or ID in new_: s.archive["clips/%s/metadata.json" % ID] = encode(c.metadata)
+                    if ID in new_:
+                        s.archive["clips/%s/clip.json" % ID] = c.clip
+                        if c.thumbs:
+                            for i, th in enumerate(c.thumbs):
+                                with open(th, "rb") as f:
+                                    s.archive["clips/%s/thumbs/%s.png" % (ID, i)] = f.read()
+            if del_:
+                for k, v in tree.items():
+                    if v[1] in del_:
+                        del s.archive[k]
+
+
 
             #
             # # Save Clips
