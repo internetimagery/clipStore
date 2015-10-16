@@ -160,14 +160,11 @@ class Character(object):
                             del s.archive[k]
                     except IndexError: pass
 
-    def createClip(s, name, data, thumbs):
+    def createClip(s):
         """
         Generate a new clip.
         """
         c = Clip(uuid.uuid4().hex) # Create a new clip ID
-        c.metadata["name"] = name
-        c.data = data
-        c.thumbs = thumbs
         s.clips.add(c)
         return c
 
@@ -184,14 +181,14 @@ class Character(object):
         with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(path)[1]) as tmp:
             tmp.write(s.archive[path])
         return Path(tmp.name)
-
-
-root = os.path.realpath("C:/Users/maczone/Desktop/test")
-f = os.path.join(root, "test2.zip")
-i = os.path.join(root, "guy.jpg")
-c = Character(f, "maya")
-
-# for clip in c.clips:
-#     print clip, clip.thumbs
-# ch = c.createClip("clip one", {"data":"stuff"}, [i,i])
-c.save()
+#
+#
+# root = os.path.realpath("C:/Users/maczone/Desktop/test")
+# f = os.path.join(root, "test2.zip")
+# i = os.path.join(root, "guy.jpg")
+# c = Character(f, "maya")
+#
+# # for clip in c.clips:
+# #     print clip, clip.thumbs
+# # ch = c.createClip("clip one", {"data":"stuff"}, [i,i])
+# c.save()

@@ -71,7 +71,6 @@ class Main(object):
                 char,
                 s.characterEdit,
                 s.clipEdit,
-                s.clipCacheThumbs,
                 s.clipRun
                 )
             return char
@@ -182,16 +181,6 @@ class Main(object):
             refresh
             )
 
-    def clipCacheThumbs(s, char, clip):
-        """
-        Pull out thumbs for use
-        Return = [ thumb1, thumb2, ... ]
-        """
-        imgs = clip.metadata.get("thumbs", False)
-        if imgs:
-            return [char.cache(imgs[a]) for a in sorted(imgs.keys())]
-        return ["savePaintSnapshot.png"]
-
     def clipCaptureThumbs(s, char, clip, camera, frameRange):
         """
         Load up thumbnails
@@ -202,18 +191,18 @@ class Main(object):
         stepSize = 3 # 5 # Size to jump across frames
 
         if not frameNum: # Single pose
-            thumbs = { 1 : s.model.thumb.capture(thumbSize, camera, frameRange[0]) }
+            thumbs = [s.model.thumb.capture(thumbSize, camera, frameRange[0])]
         elif frameNum < stepSize * 2: # Short clip. Any less and less than 3 images are created.
-            thumbs = {
-                1 : s.model.thumb.capture(thumbSize, camera, frameRange[0]),
-                2 : s.model.thumb.capture(thumbSize, camera, frameRange[0] + frameNum * 0.5),
-                3 : s.model.thumb.capture(thumbSize, camera, frameRange[1])
-                }
+            thumbs = [
+                s.model.thumb.capture(thumbSize, camera, frameRange[0]),
+                s.model.thumb.capture(thumbSize, camera, frameRange[0] + frameNum * 0.5),
+                s.model.thumb.capture(thumbSize, camera, frameRange[1])
+                ]
         else: # Long clip
             step = int(frameNum / 5) # Roughly every 5 frames.
             inc = float(frameNum) / step
-            thumbs = dict( (a+1, s.model.thumb.capture(thumbSize, camera, a * inc + frameRange[0])) for a in range(0, step+1) )
-        clip.metadata["thumbs"] = thumbs
+            thumbs = [s.model.thumb.capture(thumbSize, camera, a * inc + frameRange[0])) for a in range(0, step+1)]
+        clip.thumbs = thumbs
 
     def clipCaptureData(s, char, clip, frames):
         """
@@ -225,7 +214,7 @@ class Main(object):
         if len(frames) == 2:
             named = s.flipData(char, char.data) # Convert to real names
             capture = s.model.clip.capture(named, frames) # Capture all data
-            clip.clip = s.flipData(char, capture) # Revert data to ID's
+            clip.data = s.flipData(char, capture) # Revert data to ID's
         else:
             raise RuntimeError, "Invalid range given."
 
@@ -237,7 +226,7 @@ class Main(object):
         """
         charData = s.filterData(char.data) # Pull out our base data
         # Filter off clip data to our match our character base data
-        data = dict( (a, dict( (c, d) for c, d in b.items() if c in charData[a] )) for a, b in clip.clip.items() if a in charData )
+        data = dict( (a, dict( (c, d) for c, d in b.items() if c in charData[a] )) for a, b in clip.data.items() if a in charData )
         data = s.flipData(char, data) # Switch to real names
         selection = s.filterData(s.model.selection.current()) # Grab current selection
         # Filter out data live!

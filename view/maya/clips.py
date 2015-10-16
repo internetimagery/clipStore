@@ -9,11 +9,10 @@ import warn
 import sys
 
 class Clips(object):
-    def __init__(s, i18n, char, requestCharEdit, requestClipEdit, requestClipThumbs, sendRunClip):
+    def __init__(s, i18n, char, requestCharEdit, requestClipEdit, sendRunClip):
         s.i18n = i18n
         s.char = char
         s.requestClipEdit = requestClipEdit # We're asking to edit the clip
-        s.requestClipThumbs = requestClipThumbs # Grab thumbnails
         s.sendRunClip = sendRunClip # User wants to place the clip
         s.clips = [] # Init clips!
         name = s.char.metadata["name"].title()
@@ -89,7 +88,6 @@ class Clips(object):
                         s.wrapper,
                         s.char,
                         c,
-                        s.requestClipThumbs,
                         s.sendRunClip,
                         s.refresh
                         ))
@@ -102,7 +100,7 @@ class Clip(object):
     """
     Single clip
     """
-    def __init__(s, i18n, parent, char, clip, requestClipThumbs, sendRunClip, refresh):
+    def __init__(s, i18n, parent, char, clip, sendRunClip, refresh):
         s.wrapper = cmds.columnLayout(adj=True, bgc=[0.18,0.18,0.18], p=parent) # Main block
         s.i18n = i18n
         s.char = char
@@ -111,11 +109,8 @@ class Clip(object):
         length = clip.metadata.get("length", None)
         if length is not None:
             s.name = "%s - %s" % (s.name, length)
-        s.thumbs = requestClipThumbs(char, clip)
-        if s.thumbs:
-            s.thumbs.reverse()
-        else:
-            s.thumbs = ["ghostOff.png"]
+        s.thumbs = list(clip.thumbs) if clip.thumbs else ["savePaintSnapshot.png"]
+        s.thumbs.reverse()
         s.index = 0
         s.imgbtn = cmds.iconTextButton(
             ann=i18n["clips.addClip"],
