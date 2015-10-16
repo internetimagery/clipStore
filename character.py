@@ -40,7 +40,7 @@ class Path(str):
     """
     def __del__(s):
         if os.path.isfile(s):
-            print "Cleaning up", s
+            print "Cleaning up %s" % s
             os.remove(s)
     def __getattribute__(s, k):
         if k[0] == "_": return str.__getattribute__(s, k)
@@ -50,15 +50,15 @@ class Dict(collections.MutableMapping):
     """
     Wrapper to track changes. Changes = [New, Changed, Removed]
     """
-    def __init__(s, dictionary=None):
-        s._data = dictionary if dictionary else {}
+    def __init__(s, dictionary):
+        s._data = dictionary
         s._diff = {}; s.diff
     def __getitem__(s, k): return s._data[k]
     def __setitem__(s, k, v): s._data[k] = v
     def __iter__(s): return iter(s._data)
     def __repr__(s): return repr(s._data)
-    def __len__(s): return len(s._data)
     def __delitem__(s, k): del s._data[k]
+    def __len__(s): return len(s._data)
     def _hash(s, o):
         f = StringIO.StringIO()
         p = pickle.Pickler(f, -1)
@@ -129,19 +129,19 @@ class Character(object):
         with s.archive:
             s.metadata = Dict(dict(s.metadata, **decode(s.archive.get("metadata.json", "{}")))) # Metadata
             s.ref = Dict(reference.Reference(decode(s.archive.get("reference.json", "{}")))) # Reference file
-            s.data = Dict(dict(decode(s.archive.get("data.json", "{}")))) # Storage
+            s.data = Dict(decode(s.archive.get("data.json", "{}"))) # Storage
             if new:
                 s.metadata.diff = True
                 s.data.diff = True
                 s.ref.diff = True
             tree = dict((a, a.split("/")) for a in s.archive.keys())
             clipIDs = set(b[1] for a, b in tree.items() if b[0] == "clips" )
-            s.clips = Dict()
+            s.clips = Dict({})
             if clipIDs:
                 for ID in clipIDs:
                     c = Clip(ID)
                     c.metadata = Dict(dict(c.metadata, **decode(s.archive.get("clips/%s/metadata.json" % ID, "{}"))))
-                    c.data = decode(s.archive.get("clips/%s/data.json", "{}"))
+                    c.data = decode(s.archive.get("clips/%s/data.json" % ID, "{}"))
                     thumbs = sorted([a for a, b in tree.items() if b[0] == "clips" and b[1] == ID and b[2] == "thumbs"])
                     if thumbs:
                         for th in thumbs:
@@ -201,3 +201,8 @@ class Character(object):
         with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(path)[1]) as tmp:
             tmp.write(s.archive[path])
         return Path(tmp.name)
+
+path = "C:/Users/maczone/Desktop/test/tryout.clips"
+path = os.path.realpath(path)
+
+c = Character(path, "maya")
