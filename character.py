@@ -51,10 +51,8 @@ class Dirty(collections.MutableMapping):
     def __len__(s): return len(s.data)
     def __setitem__(s, k, v):
         s.data[k] = v
-        print "dirty"
         s._dirty = True
     def __delitem__(s, k):
-        print "dirty"
         del s.data[k]
         s._dirty = True
     def dirty():
@@ -64,7 +62,6 @@ class Dirty(collections.MutableMapping):
             s._dirty = False
             return v
         def fset(s, v):
-            print "Dirty"
             s._dirty = v
         return locals()
     dirty = property(**dirty())
