@@ -83,7 +83,7 @@ class Encoder(json.JSONEncoder):
             try:
                 return t(o)
             except: pass
-        json.JSONEncoder.default(s, o)
+        return json.JSONEncoder.default(s, o)
 def encode(*args, **kwargs): return json.dumps(*args, cls=Encoder, **kwargs)
 def decode(*args, **kwargs): return json.loads(*args, **kwargs)
 
