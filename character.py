@@ -2,8 +2,10 @@
 # Created 10/10/15 Jason Dixon
 # http://internetimagery.com
 
+import collections
 import reference
 import tempfile
+import inspect
 import os.path
 import getpass
 import archive
@@ -27,14 +29,63 @@ import os
 #               large.thumb
 
 
-class Temp_Path(str):
+class Path(str):
+    """
+    Self cleaning path
+    """
     def __del__(s):
         if os.path.isfile(s):
             print "Cleaning up", s
             os.remove(s)
     def __getattribute__(s, k):
-        raise AttributeError, "\"Temp_Path\" cannot be modified with \"%s\"" % k
+        raise AttributeError, "\"Path\" cannot be modified with \"%s\"" % k
 
+class Set(collections.MutableSet):
+    """
+    Modification notifying set
+    """
+    def __init__(s, *args, **kwargs):
+        s.data = set(*args, **kwargs)
+        s.dirty = False
+    def __contains__(s, v): return v in s.data
+    def __iter__(s): return iter(s.data)
+    def __repr__(s): return repr(s.data)
+    def __len__(s): return len(s.data)
+    def discard(s, v):
+        s.data.discard(v)
+        s.dirty = True
+    def add(s, v):
+        s.dirty = True
+        s.data.add(v)
+
+class Dict(collections.MutableMapping):
+    """
+    Modification notifying dict
+    """
+    def __init__(s, *args, **kwargs):
+        s.data = dict(*args, **kwargs)
+        s.dirty = False
+    def __getitem__(s, k): return s.data[k]
+    def __iter__(s): return iter(s.data)
+    def __repr__(s): return repr(s.data)
+    def __len__(s): return len(s.data)
+    def __setitem__(s, k, v):
+        s.dirty = True
+        s.data[k] = v
+    def __delitem__(s):
+        s.dirty = True
+        del s.data[k]
+
+class Encoder(json.JSONEncoder):
+    s._types = [dict, list]
+    def default(self, o):
+        for t in s._types:
+            try:
+                return t(o)
+            except: pass
+        json.JSONEncoder.default(s, o)
+def encode(*args, **kwargs): return json.dumps(*args, cls=Encoder, **kwargs)
+def decode(*args, **kwargs): return json.loads(*args, **kwargs)
 
 class Clip(object):
     """
@@ -98,10 +149,16 @@ class Character(object):
             "software"    : software
             }
         with s.archive:
-            s.metadata = dict(s.metadata, **s.archive.get("metadata.json", {})) # Metadata
-            s.ref = reference.Reference(s.archive.get("reference.json", {})) # Reference file
-            s.data = s.archive.get("data.json", {}) # Storage
+            s.metadata = Dict(s.metadata, **decode(s.archive.get("metadata.json", {}))) # Metadata
+            s.ref = reference.Reference(decode(s.archive.get("reference.json", {}))) # Reference file
+            s.data = Dict(decode(s.archive.get("data.json", {}))) # Storage
+            directory = dict((a, a.split("/")) for a in s.archive.keys())
+            clipIDs = set(b[1] for a, b in directory.items() if b[0] == "clips" )
             s.clips = [] # Clips
+            if clipIDs:
+                for c in clipIDs:
+                    clipImg = sorted([a, for a, b in directory.items() if b[1] == c and b[2] == "thumbs"])
+                    print c
 
 
             # # Load clips
@@ -120,10 +177,13 @@ class Character(object):
         Save data
         """
         with s.archive:
-            s.archive["metadata.json"] = json.dumps(s.metadata, indent=4)
-            s.archive["reference.json"] = json.dumps(s.ref, indent=4, cls=reference.ReferenceEncode)
-            s.archive["data.json"] = json.dumps(s.data, indent=4)
+            if s.metadata.dirty: s.archive["metadata.json"] = encode(s.metadata)
+            s.archive["reference.json"] = encode(s.ref)
+            if s.data.dirty: s.archive["data.json"] = encode(s.data)
             # CLIPS STUFF
+            if s.clips:
+                for c in s.clips:
+                    print "save clip"
 
             #
             # # Save Clips
@@ -154,14 +214,13 @@ class Character(object):
 
     def cache(s, path):
         """
-        Wrapper for savefile extract
-        Pull out requested file into temporary file to work with.
+        Pull out a file that can be interracted with.
         """
         ext = os.path.splitext(path)[1]
         data = s.archive[path]
         with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
             tmp.write(data)
-        return Temp_Path(tmp.name)
+        return Path(tmp.name)
 
 
 root = os.path.realpath(os.path.join(os.path.dirname(__file__), "test.zip"))
