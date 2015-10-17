@@ -15,6 +15,7 @@ import os.path
 import getpass
 import archive
 import shutil
+import timer
 import time
 import uuid
 import json
@@ -126,60 +127,61 @@ class Character(object):
             "name"      : os.path.basename(os.path.splitext(path)[0]),
             "software"  : software
             }
-
-        with s.archive:
-            s.metadata = Dict(dict(s.metadata, **decode(s.archive.get("metadata.json", "{}")))) # Metadata
-            s.ref = Dict(reference.Reference(decode(s.archive.get("reference.json", "{}")))) # Reference file
-            s.data = Dict(decode(s.archive.get("data.json", "{}"))) # Storage
-            if new:
-                s.metadata.diff = True
-                s.data.diff = True
-                s.ref.diff = True
-            tree = dict((a, a.split("/")) for a in s.archive.keys())
-            clipIDs = set(b[1] for a, b in tree.items() if b[0] == "clips" )
-            s.clips = Dict({})
-            if clipIDs:
-                for ID in clipIDs:
-                    c = Clip(ID)
-                    c.metadata = Dict(dict(c.metadata, **decode(s.archive.get("clips/%s/metadata.json" % ID, "{}"))))
-                    c.data = decode(s.archive.get("clips/%s/data.json" % ID, "{}"))
-                    thumbs = sorted([a for a, b in tree.items() if b[0] == "clips" and b[1] == ID and b[2] == "thumbs"])
-                    if thumbs:
-                        for th in thumbs:
-                            c.thumbs.append(s.cache(th))
-                    s.clips[ID] = c
-            s.clips.diff
+        with timer.Timer("Loading"):
+            with s.archive:
+                s.metadata = Dict(dict(s.metadata, **decode(s.archive.get("metadata.json", "{}")))) # Metadata
+                s.ref = Dict(reference.Reference(decode(s.archive.get("reference.json", "{}")))) # Reference file
+                s.data = Dict(decode(s.archive.get("data.json", "{}"))) # Storage
+                if new:
+                    s.metadata.diff = True
+                    s.data.diff = True
+                    s.ref.diff = True
+                tree = dict((a, a.split("/")) for a in s.archive.keys())
+                clipIDs = set(b[1] for a, b in tree.items() if b[0] == "clips" )
+                s.clips = Dict({})
+                if clipIDs:
+                    for ID in clipIDs:
+                        c = Clip(ID)
+                        c.metadata = Dict(dict(c.metadata, **decode(s.archive.get("clips/%s/metadata.json" % ID, "{}"))))
+                        c.data = decode(s.archive.get("clips/%s/data.json" % ID, "{}"))
+                        thumbs = sorted([a for a, b in tree.items() if b[0] == "clips" and b[1] == ID and b[2] == "thumbs"])
+                        if thumbs:
+                            for th in thumbs:
+                                c.thumbs.append(s.cache(th))
+                        s.clips[ID] = c
+                s.clips.diff
 
     def save(s):
         """
         Save data
         """
-        with s.archive:
-            if s.metadata.diff: s.archive["metadata.json"] = encode(s.metadata)
-            if s.ref.diff: s.archive["reference.json"] = encode(s.ref)
-            if s.data.diff: s.archive["data.json"] = encode(s.data)
-            # CLIPS STUFF
-            tree = dict((a, a.split("/")) for a in s.archive.keys())
-            diff1 = set(b[1] for b in tree.values() if b[0] == "clips")
-            diff2 = set(a for a in s.clips)
-            new_ = diff2 - diff1 # New clips
-            del_ = diff1 - diff2 # Removed clips
-            changes = s.clips.diff
-            if changes:
-                for ID, c in s.clips.items():
-                    if c.metadata.diff or ID in changes[0]: s.archive["clips/%s/metadata.json" % ID] = encode(c.metadata)
-                    if ID in changes[0]: # New clip
-                        s.archive["clips/%s/data.json" % ID] = encode(c.data)
-                        if c.thumbs:
-                            for i, th in enumerate(c.thumbs):
-                                with open(th, "rb") as f:
-                                    s.archive["clips/%s/thumbs/%s%s" % (ID, i, os.path.splitext(str(th))[1])] = f.read()
-                if changes[2]:
-                    for k, v in tree.items():
-                        try:
-                            if v[1] in changes[2]:
-                                del s.archive[k]
-                        except IndexError: pass
+        with timer.Timer("Saving"):
+            with s.archive:
+                if s.metadata.diff: s.archive["metadata.json"] = encode(s.metadata)
+                if s.ref.diff: s.archive["reference.json"] = encode(s.ref)
+                if s.data.diff: s.archive["data.json"] = encode(s.data)
+                # CLIPS STUFF
+                tree = dict((a, a.split("/")) for a in s.archive.keys())
+                diff1 = set(b[1] for b in tree.values() if b[0] == "clips")
+                diff2 = set(a for a in s.clips)
+                new_ = diff2 - diff1 # New clips
+                del_ = diff1 - diff2 # Removed clips
+                changes = s.clips.diff
+                if changes:
+                    for ID, c in s.clips.items():
+                        if c.metadata.diff or ID in changes[0]: s.archive["clips/%s/metadata.json" % ID] = encode(c.metadata)
+                        if ID in changes[0]: # New clip
+                            s.archive["clips/%s/data.json" % ID] = encode(c.data)
+                            if c.thumbs:
+                                for i, th in enumerate(c.thumbs):
+                                    with open(th, "rb") as f:
+                                        s.archive["clips/%s/thumbs/%s%s" % (ID, i, os.path.splitext(str(th))[1])] = f.read()
+                    if changes[2]:
+                        for k, v in tree.items():
+                            try:
+                                if v[1] in changes[2]:
+                                    del s.archive[k]
+                            except IndexError: pass
 
     def createClip(s):
         """

@@ -4,6 +4,7 @@
 
 import character
 import os.path
+import timer
 import os
 
 class Main(object):
@@ -188,24 +189,25 @@ class Main(object):
         """
         Load up thumbnails
         """
-        if not len(frameRange) == 2: raise RuntimeError, "Invalid frame range %s" % frameRange
-        frameNum = frameRange[1] - frameRange[0] # Number of frames
-        thumbSize = 200
-        stepSize = 3 # 5 # Size to jump across frames
+        with timer.Timer("Thumbnails"):
+            if not len(frameRange) == 2: raise RuntimeError, "Invalid frame range %s" % frameRange
+            frameNum = frameRange[1] - frameRange[0] # Number of frames
+            thumbSize = 200
+            stepSize = 3 # 5 # Size to jump across frames
 
-        if not frameNum: # Single pose
-            thumbs = [s.model.thumb.capture(thumbSize, camera, frameRange[0])]
-        elif frameNum < stepSize * 2: # Short clip. Any less and less than 3 images are created.
-            thumbs = [
-                s.model.thumb.capture(thumbSize, camera, frameRange[0]),
-                s.model.thumb.capture(thumbSize, camera, frameRange[0] + frameNum * 0.5),
-                s.model.thumb.capture(thumbSize, camera, frameRange[1])
-                ]
-        else: # Long clip
-            step = int(frameNum / stepSize) # Roughly every 5 frames.
-            inc = float(frameNum) / step
-            thumbs = [s.model.thumb.capture(thumbSize, camera, a * inc + frameRange[0]) for a in range(0, step+1)]
-        clip.thumbs = thumbs
+            if not frameNum: # Single pose
+                thumbs = [s.model.thumb.capture(thumbSize, camera, frameRange[0])]
+            elif frameNum < stepSize * 2: # Short clip. Any less and less than 3 images are created.
+                thumbs = [
+                    s.model.thumb.capture(thumbSize, camera, frameRange[0]),
+                    s.model.thumb.capture(thumbSize, camera, frameRange[0] + frameNum * 0.5),
+                    s.model.thumb.capture(thumbSize, camera, frameRange[1])
+                    ]
+            else: # Long clip
+                step = int(frameNum / stepSize) # Roughly every 5 frames.
+                inc = float(frameNum) / step
+                thumbs = [s.model.thumb.capture(thumbSize, camera, a * inc + frameRange[0]) for a in range(0, step+1)]
+            clip.thumbs = thumbs
 
     def clipCaptureData(s, char, clip, frames):
         """
@@ -214,12 +216,13 @@ class Main(object):
             frames = [ frameStart, frameEnd ]
         Insert into clip = { object : { attribute : [val1, val2, val3, ... ]} }
         """
-        if len(frames) == 2:
-            named = s.flipData(char, char.data) # Convert to real names
-            capture = s.model.clip.capture(named, frames) # Capture all data
-            clip.data.update(**s.flipData(char, capture)) # Revert data to ID's
-        else:
-            raise RuntimeError, "Invalid range given."
+        with timer.Timer("Store Clip (tm)"):
+            if len(frames) == 2:
+                named = s.flipData(char, char.data) # Convert to real names
+                capture = s.model.clip.capture(named, frames) # Capture all data
+                clip.data.update(**s.flipData(char, capture)) # Revert data to ID's
+            else:
+                raise RuntimeError, "Invalid range given."
 
     def clipRun(s, char, clip, include=False, ignore=False):
         """
@@ -227,16 +230,17 @@ class Main(object):
         if include, only run on what is selected.
         if ignore, run on everything that is not selected.
         """
-        charData = s.filterData(char.data) # Pull out our base data
-        # Filter off clip data to our match our character base data
-        data = dict( (a, dict( (c, d) for c, d in b.items() if c in charData[a] )) for a, b in clip.data.items() if a in charData )
-        data = s.flipData(char, data) # Switch to real names
-        selection = s.filterData(s.model.selection.current()) # Grab current selection
-        # Filter out data live!
-        if include and ignore:
-            raise AttributeError, "You cannot use both include and ignore at the same time."
-        elif include:
-            data = dict( (a, dict( (c, data[a][c]) for c, d in b.items() if c in data[a] ) ) for a, b in selection.items() if a in data )
-        elif ignore:
-            data =dict( (e, f) for e, f in dict( (a, dict( (c, d) for c, d in b.items() if a not in selection or c not in selection[a] ) ) for a, b in data.items() ).items() if f)
-        s.model.clip.replay(data) # FINALLY after all this craziness. Lets pose out our animation!
+        with timer.Timer("Apply Clip"):
+            charData = s.filterData(char.data) # Pull out our base data
+            # Filter off clip data to our match our character base data
+            data = dict( (a, dict( (c, d) for c, d in b.items() if c in charData[a] )) for a, b in clip.data.items() if a in charData )
+            data = s.flipData(char, data) # Switch to real names
+            selection = s.filterData(s.model.selection.current()) # Grab current selection
+            # Filter out data live!
+            if include and ignore:
+                raise AttributeError, "You cannot use both include and ignore at the same time."
+            elif include:
+                data = dict( (a, dict( (c, data[a][c]) for c, d in b.items() if c in data[a] ) ) for a, b in selection.items() if a in data )
+            elif ignore:
+                data =dict( (e, f) for e, f in dict( (a, dict( (c, d) for c, d in b.items() if a not in selection or c not in selection[a] ) ) for a, b in data.items() ).items() if f)
+            s.model.clip.replay(data) # FINALLY after all this craziness. Lets pose out our animation!

@@ -2,6 +2,9 @@
 
 from i18n.en import En as i18n # ENGLISH
 import main
+import timer
+
+timer.Timer.verbose = True
 
 def Start():
     """
