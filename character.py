@@ -42,7 +42,7 @@ class Path(str):
     """
     def __del__(s):
         if os.path.isfile(s):
-            print "Cleaning up %s" % s
+            # print "Cleaning up %s" % s
             os.remove(s)
     def __getattribute__(s, k):
         if k[0] == "_": return str.__getattribute__(s, k)
