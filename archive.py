@@ -5,7 +5,6 @@
 import shutil
 import os.path
 import zipfile
-import tempfile
 import collections
 try:
     import zlib
@@ -15,60 +14,65 @@ except ImportError:
 
 class Archive(collections.MutableMapping):
     def __init__(s, path):
-        s.mode = "r"
-        s.path = path
-        s.data = {}
-        s.dirty = False
-        s.counter = 0
+        s._depth = 0
+        s._mode = "r"
+        s._path = path
+        s._dirty = False
         if os.path.isfile(path):
-            with s: s.data = dict((a, str) for a in s.z.namelist())
+            with s: s._data = dict((a, file) for a in s.z.namelist())
         else:
-            s.mode = "w"
+            s._data = {}
+            s._mode = "w"
             with s: pass
     def __enter__(s):
-        if not s.counter:
-            s.z = zipfile.ZipFile(s.path, s.mode, compress)
-        s.counter += 1
+        if not s._depth:
+            s.z = zipfile.ZipFile(s._path, s._mode, compress)
+        s._depth += 1
         return s
     def __exit__(s, *err):
-        s.counter -= 1
-        s.mode = "r"
-        if not s.counter:
-            s.z.close()
-            if s.dirty:
-                s.dirty = False
-                tmp = tempfile.mkdtemp()
-                try:
-                    dirty = set(a for a, b in s.data.items() if b is not str)
-                    s.mode = "a"
+        s._depth -= 1
+        s._mode = "r"
+        if not s._depth:
+            if s._dirty:
+                s._dirty = False
+                dirty = set(a for a, b in s._data.items() if b is not file)
+                n = set(s.z.namelist())
+                if dirty - n and not dirty & n:
+                    s.z.close()
+                    s._mode = "a"
                     with s:
-                        n = set(s.z.namelist())
-                        if dirty - n and not dirty & n:
-                            for k in dirty:
-                                s.z.writestr(k, s.data[k])
-                            return
-                        s.z.extractall(tmp)
-                    paths = dict((a, os.path.realpath(os.path.join(tmp, a))) for a in s.data)
-                    s.mode = "w"
-                    with s:
-                        for k, p in paths.items():
-                            if k in dirty:
-                                s.z.writestr(k, s.data[k])
-                            else:
-                                s.z.write(p, k)
-                        s.data = dict((a, str) for a in s.z.namelist())
-                finally:
-                    shutil.rmtree(tmp)
-    def __iter__(s): return iter(s.data)
-    def __repr__(s): return repr(s.data)
-    def __len__(s): return len(s.data)
+                        for k in dirty:
+                            s.z.writestr(k, s._data[k])
+                else:
+                    read = s.z
+                    s._mode = "w"
+                    path = s._path
+                    s._path = "%s.incomplete" % s._path
+                    try:
+                        with s:
+                            s.z.comment = read.comment
+                            for k in s._data:
+                                if k in dirty:
+                                    s.z.writestr(k, s._data[k])
+                                else:
+                                    s.z.writestr(k, read.read(k))
+                        read.close()
+                        shutil.move(s._path, path)
+                    finally:
+                        s._path = path
+                s._data = dict((a, file) for a in s.z.namelist())
+            else:
+                s.z.close()
+    def __iter__(s): return iter(s._data)
+    def __repr__(s): return repr(s._data)
+    def __len__(s): return len(s._data)
     def __getitem__(s, k):
         with s: return s.z.read(k)
     def __setitem__(s, k, v):
         with s:
-            s.data[k] = v
-            s.dirty = True
+            s._data[k] = v
+            s._dirty = True
     def __delitem__(s, k):
         with s:
-            del s.data[k]
-            s.dirty = True
+            del s._data[k]
+            s._dirty = True
