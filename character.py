@@ -8,7 +8,6 @@ except ImportError:
     import pickle
 import collections
 import reference
-import StringIO
 import tempfile
 import inspect
 import os.path
@@ -62,16 +61,7 @@ class Dict(collections.MutableMapping):
     def __delitem__(s, k): del s._data[k]
     def __len__(s): return len(s._data)
     def _hash(s, o):
-        f = StringIO.StringIO()
-        p = pickle.Pickler(f, -1)
-        p.persistent_id = s._filter
-        p.dump(o); f.seek(0)
-        return f.read()
-    def _filter(s, o):
-        try:
-            return pickle.dumps(o)
-        except:
-            return str(o.__class__)
+        return pickle.dumps(o, -1)
     def diff():
         def fget(s):
             diff1 = set([a for a in s._data]) # Current keys
