@@ -46,8 +46,7 @@ class Archive(collections.MutableMapping):
                 else:
                     read = s.z
                     s._mode = "w"
-                    path = s._path
-                    s._path = "%s.incomplete" % s._path
+                    path, s._path = s._path, "%s.incomplete" % s._path
                     try:
                         with s:
                             s.z.comment = read.comment
