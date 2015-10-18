@@ -37,7 +37,7 @@ En = {
 
     "selector.title"                    : "Pick a Clip file:",
     "selector.none"                     : "There are no Clip files in this folder.",
-    "selector.open"                     : "Open a folder containing Clips",
+    "selector.open"                     : "Open an existing Clip file.",
     "selector.new"                      : "Create a new Clip file.",
 
     "clips.title"                       : "Clips",

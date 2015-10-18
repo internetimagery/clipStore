@@ -49,14 +49,14 @@ class Selector(object):
     def createNew(s):
         path = fileDialog.FileDialog(s.i18n).save(s.ext)
         if path:
+            s.sendNew(path)
             s.openFolder(os.path.dirname(path))
-            # s.sendNew(path)
 
     def loadExisting(s):
         path = fileDialog.FileDialog(s.i18n).load(s.ext)
         if path:
+            s.sendOpen(path)
             s.openFolder(os.path.dirname(path))
-            # s.sendOpen(path)
 
     def openFolder(s, root):
         cmds.deleteUI(cmds.layout(s.wrapper, q=True, ca=True))
@@ -68,6 +68,7 @@ class Selector(object):
                 font="boldLabelFont",
                 image="SP_DirClosedIcon.png" if folder else "polyColorSetEditor.png",
                 h=40,
+                bgc=[0.22,0.22,0.22] if folder else [0.2,0.2,0.2],
                 c=lambda: warn.run(s.openFolder if folder else s.sendOpen, path)
             )
         def addShortcut(index):
