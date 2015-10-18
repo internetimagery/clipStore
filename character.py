@@ -164,8 +164,9 @@ class Character(object):
                             s.archive["clips/%s/data.json" % ID] = encode(c.data)
                             if c.thumbs:
                                 for i, th in enumerate(c.thumbs):
-                                    with open(th, "rb") as f:
-                                        s.archive["clips/%s/thumbs/%s%s" % (ID, i, os.path.splitext(str(th))[1])] = f.read()
+                                    if os.path.isabs(th):
+                                        with open(th, "rb") as f:
+                                            s.archive["clips/%s/thumbs/%s%s" % (ID, i, os.path.splitext(str(th))[1])] = f.read()
                     if changes[2]:
                         for k, v in tree.items():
                             try:
