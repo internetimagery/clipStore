@@ -32,6 +32,8 @@ En = {
     "filedialog.loadBtn"                : "Load Character",
     "filedialog.saveBtn"                : "Save Character",
     "filedialog.openDir"                : "Select a Folder",
+    "filedialog.clipname"               : "Clips File",
+    "filedialog.folderOnly"             : "Clips Folder",
 
     "selector.title"                    : "Pick a Clip file:",
     "selector.none"                     : "There are no Clip files in this folder.",

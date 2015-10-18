@@ -19,7 +19,7 @@ class Main(object):
         # Load our Selector window
         view.selector(
             s.i18n,
-            s.sendFiles,
+            s.ext,
             s.characterNew,
             s.characterLoad
             )
@@ -38,23 +38,12 @@ class Main(object):
         """
         return dict((e, f) for e, f in dict( (a, dict((c, d) for c, d in b.items() if d) ) for a, b in data.items()).items() if f)
 
-    def sendFiles(s, path=None):
-        """
-        Given user input path, list character files in a dir.
-        """
-        if not path:
-            path = s.view.fileDialog(s.i18n).openDir()
-        if path:
-            path = os.path.realpath(path)
-            return [os.path.join(path, f) for f in os.listdir(path) if s.ext in f]
-
     # CHARACTER RELATED STUFF!
 
-    def characterNew(s):
+    def characterNew(s, path):
         """
         Create a new character!
         """
-        path = s.view.fileDialog(s.i18n).save()
         if path:
             if os.path.isfile(path): os.remove(path)
             char = s.characterLoad(path)
