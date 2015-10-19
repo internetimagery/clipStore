@@ -33,7 +33,7 @@ class Archive(collections.MutableMapping):
         s._depth -= 1
         s._mode = "r"
         if not s._depth:
-            if s._dirty:
+            if s._dirty and not err[0]:
                 s._dirty = False
                 dirty = set(a for a, b in s._data.items() if b is not file)
                 n = set(s.z.namelist())
