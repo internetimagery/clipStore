@@ -105,7 +105,8 @@ class ClipEdit(object):
             s.camera = cmds.ls(s.camName)[0]
         cmds.viewSet(s.camera, p=True) # Move camera to perspective position
         sel = cmds.ls(sl=True)
-        cmds.select([a for a in s.data if cmds.objExists(a)], r=True)
+        objs = [a for a in s.data if cmds.objExists(a)]
+        if objs: cmds.select(obj, r=True)
         cmds.viewFit(s.camera, f=0.5)
         cmds.select(sel, r=True)
         cmds.setAttr("%s.focalLength" % s.camera, 500)
