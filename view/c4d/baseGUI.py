@@ -32,7 +32,6 @@ class Window(gui.geDialog):
             raise RuntimeError, "No ID or Function provided."
     def ID(s):
         id = s._idStart
-        while id in s._widgets:
-            id += 1
-        s._widgets[id] = None
+        while id in s._widgets: id += 1
+        s.Bind(id, None)
         return id
