@@ -9,13 +9,21 @@ class Window(gui.geDialog):
     """
     def __init__(s):
         s._widgets = {}
+        s._events = {}
         s._idStart = 4000 # Where do we want to start our ID's?
         gui.geDialog.__init__(s)
     def CreateLayout(s):
         raise NotImplementedError, "Override \"CreateLayout\"."
+        return True
     def Command(s, id, msg):
         if id in s._widgets and callable(s._widgets[id]):
             s._widgets(id, msg)
+        return True
+    def CoreMessage(s, id, msg):
+        if id in s._events and s._events[id]:
+            for call in s._events[id]:
+                if callable(call): call(id, msg)
+        return True
     def Bind(s, id, func):
         if id in s._widgets:
             raise RuntimeError, "ID: %s is already bound!" % id
