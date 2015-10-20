@@ -9,7 +9,7 @@ class Window(gui.geDialog):
     """
     def __init__(s):
         s._widgets = {}
-        s._id_start = 4000 # Where do we want to start our ID's?
+        s._idStart = 4000 # Where do we want to start our ID's?
         gui.geDialog.__init__(s)
     def CreateLayout(s):
         raise NotImplementedError, "Override \"CreateLayout\"."
@@ -28,8 +28,10 @@ class Window(gui.geDialog):
             for a, b in s._widgets.items():
                 if func == b:
                     del s._widgets[a]
+        else:
+            raise RuntimeError, "No ID or Function provided."
     def ID(s):
-        id = s._id_start
+        id = s._idStart
         while id in s._widgets:
             id += 1
         s._widgets[id] = None
