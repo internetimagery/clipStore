@@ -3,6 +3,7 @@
 # http://internetimagery.com
 
 import maya.cmds as cmds
+from time import time
 from collections import defaultdict as dd
 
 class Clip(object):
@@ -45,23 +46,27 @@ class Clip(object):
                 print "%s could not be found. Skipping!" % o
         # Ok our data is now valid. Lets get a posin! Phew. The final step...
         if not validData: raise RuntimeError, "Nothing in the Clip to pose."
+
+        err = None
+        cmds.undoInfo(openChunk=True)
+        autokeyState = cmds.autoKeyframe(q=True, state=True)
+        cmds.autoKeyframe(state=False) # Turn off autokey
         try: # Open undo block!
-            cmds.undoInfo(openChunk=True)
-            try:
-                # Flip the values for more efficient function calls
-                while True:
-                    cache = dd(list)
-                    for o, val in validData.items():
-                        cache[val[index]].append(o)
-                    if cache:
-                        for val, o in cache.items(): # Keyframe the positions
-                            cmds.setKeyframe(o, t=frame, v=val)
-                    frame += 1
-                    index += 1
-            except IndexError:
-                cmds.currentTime(frame - 1) # Jump to final frame
-                print "Clip posed!"
+            for attr, vals in validData.iteritems():
+                frames = len(vals) # Get length to iterate!
+                break
+
+            for i in range(frames):
+                cmds.currentTime(frame + i) # Jump to frame
+                for attr, vals in validData.iteritems(): # Lots of looping. :(
+                    cmds.setAttr(attr, vals[i])
+                    cmds.setKeyframe(attr)
+            print "Clip posed!"
+        except Exception as err:
+            raise
         finally:
+            cmds.autoKeyframe(state=autokeyState)
             cmds.undoInfo(closeChunk=True)
+            if err: cmds.undo() # Jump back to stable scene state
 
 Clip = Clip()
