@@ -47,7 +47,6 @@ class Clip(object):
         # Ok our data is now valid. Lets get a posin! Phew. The final step...
         if not validData: raise RuntimeError, "Nothing in the Clip to pose."
 
-        err = None
         cmds.undoInfo(openChunk=True)
         autokeyState = cmds.autoKeyframe(q=True, state=True)
         cmds.autoKeyframe(state=False) # Turn off autokey
@@ -59,14 +58,14 @@ class Clip(object):
             for i in range(frames):
                 cmds.currentTime(frame + i) # Jump to frame
                 for attr, vals in validData.iteritems(): # Lots of looping. :(
-                    cmds.setAttr(attr, vals[i])
-                    cmds.setKeyframe(attr)
+                    try:
+                        cmds.setAttr(attr, vals[i])
+                        cmds.setKeyframe(attr)
+                    except RuntimeError as e:
+                        print "Warning \"%s\" :: %s" % (attr, e)
             print "Clip posed!"
-        except Exception as err:
-            raise
         finally:
             cmds.autoKeyframe(state=autokeyState)
             cmds.undoInfo(closeChunk=True)
-            if err: cmds.undo() # Jump back to stable scene state
 
 Clip = Clip()
